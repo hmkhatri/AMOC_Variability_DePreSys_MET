@@ -1,11 +1,12 @@
 #!/bin/bash 
-#SBATCH --partition=par-single
-#SBATCH --ntasks=4 
+#SBATCH --partition=short-serial
+# SBATCH --ntasks=4 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
+#SBATCH --time=08:00:00
 
 # load python3 module
-module load jaspy/3.7/r20200606
+module load jaspy/3.7/r20181219
 
 # Execute python script
 srun python3 Combine_Data_Overturning.py 

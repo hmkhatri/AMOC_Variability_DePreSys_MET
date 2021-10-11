@@ -4,6 +4,9 @@ import xarray as xr
 import dask.distributed
 from dask.distributed import Client
 
+import warnings
+warnings.filterwarnings('ignore')
+
 # Read ensemble data for one year
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/2008-az256/"
@@ -14,7 +17,7 @@ ds = []
 
 for i in range(0,10):
     
-    d = xr.open_mfdataset(ppdir + "r" + str(i+1) + "/onm/*.nc", concat_dim='time_counter')
+    d = xr.open_mfdataset(ppdir + "r" + str(i+1) + "/onm/*.nc")
     ds.append(d)
     
 ds = xr.concat(ds, dim='r')
