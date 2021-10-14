@@ -11,7 +11,8 @@ warnings.filterwarnings('ignore')
 
 # year = 2008; code = "az256"
 # year = 2010; code = "bi795"
-year = 1960; code = "av640"
+# year = 1960; code = "av640"
+year = 1966; code = "ax118"
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/"
 
