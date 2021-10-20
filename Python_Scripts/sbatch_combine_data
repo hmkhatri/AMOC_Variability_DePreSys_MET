@@ -15,4 +15,6 @@ module load jaspy/3.7/r20181219
 
 # srun python3 Combine_Data_Ocean_Surface_grid_T.py
 
-srun python3 Combine_Data_Overturning.py 
+# srun python3 Combine_Data_Overturning.py
+
+srun python3 Combine_Data_Atmosphere_var.py 

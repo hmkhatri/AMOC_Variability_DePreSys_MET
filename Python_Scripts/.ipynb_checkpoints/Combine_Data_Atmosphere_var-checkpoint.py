@@ -27,7 +27,7 @@ for year in range (2008, 2011, 2):
     
         #for var in var_list:
         
-            var_path = "s" + str(year) +"-r" + str(i+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(i+1) + "i1p1f2/Amon/" + var + "/gn/files/d20200417/"
     
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
         
