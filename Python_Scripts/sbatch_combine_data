@@ -1,9 +1,9 @@
 #!/bin/bash 
 # SBATCH --partition=par-single
 # SBATCH --ntasks=4
-# SBATCH --partition=short-serial
-#SBATCH --partition=short-serial-4hr
-#SBATCH --account=short4hr 
+#SBATCH --partition=short-serial
+# SBATCH --partition=short-serial-4hr
+# SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
 #SBATCH --time=4:00:00
@@ -15,6 +15,6 @@ module load jaspy/3.7/r20181219
 
 # srun python3 Combine_Data_Ocean_Surface_grid_T.py
 
-# srun python3 Combine_Data_Overturning.py
+srun python3 Combine_Data_Overturning.py
 
-srun python3 Combine_Data_Atmosphere_var.py 
+# srun python3 Combine_Data_Atmosphere_var.py 
