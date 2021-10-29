@@ -16,9 +16,9 @@ warnings.filterwarnings('ignore')
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/"
 
-save_path="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/Data_Consolidated/" 
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/" 
 
-for year in range(2012, 2017, 2):
+for year in range(1961, 2016, 2):
 
     ds = []
 
