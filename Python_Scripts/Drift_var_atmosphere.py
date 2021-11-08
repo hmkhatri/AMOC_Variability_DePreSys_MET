@@ -26,7 +26,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/"
 
-var_list = ['hfds', 'mlotst', 'tos', 'sos', 'zos']
+var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
 
 #var = var_list[0]
 
@@ -42,17 +42,17 @@ for var in var_list:
 
         for i in range(0,10):
 
-            var_path = "s" + str(year) +"-r" + str(i+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(i+1) + "i1p1f2/Amon/" + var + "/gn/files/d20200417/"
 
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
-            # d = d.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
-            # d = d.isel(i=slice(749,1199), j = slice(699, 1149))
+            d = d.drop(['lon_bnds', 'lat_bnds', 'time_bnds'])
+            #d = d.isel(i=slice(749,1199), j = slice(699, 1149))
+            if ( var == 'ua' or var == 'va'):
+                d = d.sel(plev = 85000.)
 
             ds1.append(d)
 
         ds1 = xr.concat(ds1, dim='r')
-        ds1 = ds1.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
-        ds1 = ds1.isel(i=slice(749,1199), j = slice(699, 1149))
         
         # save yearly mean files
         tmp = delayed(processDataset)(ds1.isel(time=slice(2,122)))
@@ -64,7 +64,7 @@ for var in var_list:
 
         print("File saved for var = ", var, year)
 
-        # ds.append(ds1)
+        #ds.append(ds1)
 
     #ds = xr.concat(ds, dim='start_year')
 
@@ -75,6 +75,7 @@ for var in var_list:
     #print("Data read complete var = ", var)
 
     ## --------- Parallel Computations with dask ------------ ##
+
     """
     ds_save = []
 
@@ -97,11 +98,11 @@ for var in var_list:
     print("Computations Complete")
 
     ## -------- Save File ----------- ## 
-    save_file = save_path +"Drift_" + var + ".nc"
+    save_file = save_path +"Drift_atmos_" + var + ".nc"
     ds_save.to_netcdf(save_file)
 
     print("File saved for var = ", var)  
-
+    
     """
                   
             
