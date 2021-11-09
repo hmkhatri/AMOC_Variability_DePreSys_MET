@@ -1,13 +1,13 @@
 #!/bin/bash 
 #SBATCH --partition=par-single
-#SBATCH --ntasks=8
+#SBATCH --ntasks=4
 # SBATCH --partition=high-mem
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=16:00:00
 
 # load python3 module
 module load jaspy/3.7/r20181219
@@ -24,4 +24,8 @@ module load jaspy/3.7/r20181219
 
 # srun python3 Drift_var_ocean.py
 
-srun python3 Drift_var_atmosphere.py 
+# srun python3 Drift_var_atmosphere.py
+
+srun python3 Drift_combine_yearwise.py
+
+module purge 

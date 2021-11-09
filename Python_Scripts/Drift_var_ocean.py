@@ -26,9 +26,9 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/"
 
-var_list = ['hfds', 'mlotst', 'tos', 'sos', 'zos']
+#var_list = ['hfds', 'mlotst', 'tos', 'sos', 'zos']
 
-#var = var_list[0]
+var_list = ['zos']
 
 # Loop over year to combine indivual year files
 
@@ -36,7 +36,7 @@ for var in var_list:
 
     ds = []
 
-    for year in range(1960, 2017, 1):
+    for year in range(2011, 2017, 1):
 
         ds1 = []
 
