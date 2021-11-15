@@ -20,7 +20,7 @@ save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP
 # variable list to keep in the dataset
 var_list = ['hfbasin_atlantic', 'hfbasinpmdiff_atlantic', 'hfovgyre_atlantic', 'hfovovrt_atlantic', 'sophtadv_atlantic', 
             'sltbasin_atlantic', 'sltbasinpmdiff_atlantic', 'sltovgyre_atlantic', 'sltovovrt_atlantic', 'sopstadv_atlantic',
-            'zomsfatl', 'zosalatl','zosrfatl']
+            'zomsfatl', 'zosalatl','zosrfatl', 'zotematl']
 
 ds = []
 
@@ -65,9 +65,9 @@ for lead_year in range (0,11):
     
     print("Lead Year running = ", lead_year)
 
-    ds_save = delayed(processDataset)(ds, year1, year2, lead_year)
+    ds_save = processDataset(ds, year1, year2, lead_year)
     
-    ds_save = delayed(mean)(ds_save)
+    ds_save = sum(ds_save) / (year2 - year1)
 
     ds_save = ds_save.compute()
     
