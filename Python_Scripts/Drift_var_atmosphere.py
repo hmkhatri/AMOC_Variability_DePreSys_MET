@@ -26,9 +26,9 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/"
 
-var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
+#var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
 
-#var_list = ['psl']
+var_list = ['psl']
 
 # Loop over year to combine indivual year files
 
@@ -36,7 +36,7 @@ for var in var_list:
 
     ds = []
 
-    for year in range(1960, 2017, 1):
+    for year in range(1960, 1961, 1):
 
         ds1 = []
 

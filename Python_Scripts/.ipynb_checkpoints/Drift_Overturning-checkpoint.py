@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/"
 
-save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/"
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
 # variable list to keep in the dataset
 var_list = ['hfbasin_atlantic', 'hfbasinpmdiff_atlantic', 'hfovgyre_atlantic', 'hfovovrt_atlantic', 'sophtadv_atlantic', 
@@ -38,6 +38,47 @@ ds = ds.assign(start_year = np.arange(1960, 2017, 1))
 ds = ds.chunk({'start_year': 1})
 
 print("Data read complete")
+
+
+## ------------- Doug's method (DCPP 2016 Appendix) ---------
+
+# Consider winter seasons DJF in the time period 1970 - 2016. We compute average over these seasonal mean values while retaining the
+# lead year information. For example, for 1st DJF - consider hindcasts 1970 - 2016, for 2nd DJF consider hindcasts 1969- 2015 etc.
+# Compute the mean for all ensembles separately and substract this mean to obtain anomaly trend.
+
+year1, year2 = (1970, 2016)
+
+def processDataset(ds1, year1, year2):
+    
+    ds_save = []
+    
+    for year in range(year1, year2, lead_year):
+        
+        # Extract relevant DJF months data and mean over the season
+        ds1 = ds.sel(start_year = year - lead_year).isel(time_counter=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time_counter')
+        
+        ds_save.append(ds1)
+        
+    return ds_save
+
+for lead_year in range (0,11):
+    
+    print("Lead Year running = ", lead_year)
+
+    ds_save = delayed(processDataset)(ds, year1, year2, lead_year)
+    
+    ds_save = delayed(mean)(ds_save)
+
+    ds_save = ds_save.compute()
+    
+    save_file = save_path +"Drift_diaptr_Lead_Year_" + str(int(lead_year+1)) + ".nc"
+    ds_save.to_netcdf(save_file)
+
+    print("File saved")    
+    
+
+"""
+# Old method required for linear trend computations
 
 ## --------- Parallel Computations with dask ------------ ##
 
@@ -74,3 +115,4 @@ save_file = save_path +"Drift_diaptr.nc"
 ds_save.to_netcdf(save_file)
 
 print("File saved")    
+"""

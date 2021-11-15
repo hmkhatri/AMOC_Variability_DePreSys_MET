@@ -11,6 +11,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt', 'hfds', 'mlotst', 'tos', 'sos', 'zos']
+# var_list = ['psl']
 
 ppdir = "/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Temp/"
 save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/"
@@ -22,6 +23,7 @@ for var in var_list:
     for year in range(1960, 2017, 1):
         
         d = xr.open_dataset(ppdir + "Drift_" + var + "_" + str(year) + ".nc")
+        d = d.drop('year') 
         ds.append(d)
         
     ds = xr.concat(ds, dim='start_year')

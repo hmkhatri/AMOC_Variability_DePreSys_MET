@@ -1,8 +1,8 @@
 #!/bin/bash 
-#SBATCH --partition=par-single
-#SBATCH --ntasks=4
+# SBATCH --partition=par-single
+# SBATCH --ntasks=4
 # SBATCH --partition=high-mem
-# SBATCH --partition=short-serial
+#SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
@@ -10,7 +10,7 @@
 #SBATCH --time=16:00:00
 
 # load python3 module
-module load jaspy/3.7/r20181219
+# module load jaspy/3.7/r20181219
 
 # Execute python script
 
@@ -26,6 +26,11 @@ module load jaspy/3.7/r20181219
 
 # srun python3 Drift_var_atmosphere.py
 
-srun python3 Drift_combine_yearwise.py
+# srun python3 Drift_combine_yearwise.py
+
+
+module load jaspy # latest version
+
+srun python3 Drift_Trend_compute.py
 
 module purge 
