@@ -48,11 +48,11 @@ print("Data read complete")
 
 year1, year2 = (1970, 2016)
 
-def processDataset(ds1, year1, year2):
+def processDataset(ds1, year1, year2, lead_year):
     
     ds_save = []
     
-    for year in range(year1, year2, lead_year):
+    for year in range(year1, year2):
         
         # Extract relevant DJF months data and mean over the season
         ds1 = ds.sel(start_year = year - lead_year).isel(time_counter=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time_counter')
@@ -77,11 +77,11 @@ for lead_year in range (0,11):
     print("File saved")    
     
 
-"""
 # Old method required for linear trend computations
 
 ## --------- Parallel Computations with dask ------------ ##
 
+"""
 def processDataset(ds1):
     
     tmp = (ds1.sum('r').groupby('time_centered.year').mean('time_counter'))
