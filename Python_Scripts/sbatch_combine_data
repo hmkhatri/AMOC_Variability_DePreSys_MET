@@ -7,7 +7,7 @@
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=16:00:00
+#SBATCH --time=24:00:00
 
 # load python3 module
 module load jaspy/3.7/r20181219
@@ -15,17 +15,15 @@ module load jaspy/3.7/r20181219
 # Execute python script
 
 # srun python3 Combine_Data_Ocean_Surface_grid_T.py
-
 # srun python3 Combine_Data_Overturning.py
-
 # srun python3 Combine_Data_Atmosphere_var.py
 
-srun python3 Drift_Overturning.py
+# srun python3 Drift_Overturning.py
+# srun python3 Drift_ocean_var_DCPP2016.py
+srun python3 Drift_atmosphere_var_DCPP2016.py
 
 # srun python3 Drift_var_ocean.py
-
 # srun python3 Drift_var_atmosphere.py
-
 # srun python3 Drift_combine_yearwise.py
 
 
