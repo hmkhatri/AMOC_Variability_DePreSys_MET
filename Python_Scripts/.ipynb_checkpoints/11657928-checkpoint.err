@@ -1,0 +1,9 @@
+cpu-bind=MASK - host602, task  0  0 [47348]: mask 0x2000000 set
+cpu-bind=MASK - host602, task  0  0 [47395]: mask 0x2000000 set
+Traceback (most recent call last):
+  File "Drift_atmosphere_var_DCPP2016.py", line 62, in <module>
+    ds = ds.chunk({'start_year':1, 'time':1, 'j':50, 'i':50})
+  File "/apps/contrib/jaspy/miniconda_envs/jaspy3.7/m3-4.5.11/envs/jaspy3.7-m3-4.5.11-r20181219/lib/python3.7/site-packages/xarray/core/dataset.py", line 1357, in chunk
+    'object: %s' % bad_dims)
+ValueError: some chunks keys are not dimensions on this object: ['j', 'i']
+srun: error: host602: task 0: Exited with exit code 1

@@ -31,7 +31,8 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
-var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
+var_list = ['va'] #, 'ua'] 
+#var_list = ['psl', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -52,6 +53,9 @@ for var in var_list:
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
             d = d.drop('time') # drop time coordinate as different time values create an issue in concat operation
             
+            if ( var == 'ua' or var == 'va'):
+                d = d.sel(plev = 85000.)
+            
             ds.append(d)
             
         # combine data for hindcasts
@@ -59,7 +63,7 @@ for var in var_list:
         ds = ds.drop(['lon_bnds', 'lat_bnds', 'time_bnds'])
         
         ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
-        ds = ds.chunk({'start_year':1, 'time':1, 'j':50, 'i':50})
+        ds = ds.chunk({'start_year':1, 'time':1})
         
         print("Data read complete")
         
@@ -77,5 +81,5 @@ for var in var_list:
             save_file = save_path +"Drift_" + var + "_r" + str(r+1)+ "_Lead_Year_" + str(int(lead_year+1)) + ".nc"
             ds_save.to_netcdf(save_file)
 
-            print("File saved")
+            print("File saved, Lead Year = ", lead_year + 1)
 

@@ -46,7 +46,7 @@ print("Data read complete")
 # lead year information. For example, for 1st DJF - consider hindcasts 1970 - 2016, for 2nd DJF consider hindcasts 1969- 2015 etc.
 # Compute the mean for all ensembles separately and substract this mean to obtain anomaly trend.
 
-year1, year2 = (1970, 2016)
+year1, year2 = (1979, 2017) # DJF (1979) to DJF (2016)  
 
 def processDataset(ds1, year1, year2, lead_year):
     

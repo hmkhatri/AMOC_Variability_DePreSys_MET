@@ -1,0 +1,2 @@
+cpu-bind=MASK - host604, task  0  0 [37953]: mask 0x400 set
+cpu-bind=MASK - host604, task  0  0 [38463]: mask 0x400 set
