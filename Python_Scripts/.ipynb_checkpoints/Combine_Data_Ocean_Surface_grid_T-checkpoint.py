@@ -11,7 +11,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/Data_Consolidated/"
 
-var_list = ['volo', 'hfds', 'mlotst', 'tos', 'sos', 'zos']
+var_list = ['hfds', 'mlotst', 'tos', 'sos', 'zos']
 
 for year in range (2008, 2011, 2):
     
@@ -44,6 +44,6 @@ for year in range (2008, 2011, 2):
 
         print("Data reading completed -> Moving to write variable: ", var)
 
-        save_file = save_path + str(year) + "_" + "var.nc"
-        #ds_save = ds.persist()
-        ds_save.to_netcdf(save_file)
+        save_file = save_path + str(year) + "_" + var + ".nc"
+        #ds = ds.persist()
+        ds.to_netcdf(save_file)

@@ -11,25 +11,28 @@ warnings.filterwarnings('ignore')
 
 # year = 2008; code = "az256"
 # year = 2010; code = "bi795"
-year = 1960; code = "av640"
+# year = 1960; code = "av640"
+# year = 1966; code = "ax118"
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/"
 
-save_path="/home/users/hkhatri/DePreSys4_Data/Ensemble_Data/Data_Consolidated/" 
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/" 
 
-ds = []
+for year in range(1961, 2016, 2):
 
-print("Year Running - ", year)
+    ds = []
 
-for i in range(0,10):
+    print("Year Running - ", year)
+
+    for i in range(0,10):
     
-    d = xr.open_mfdataset(ppdir + str(year) + "-" + code + "/r" + str(i+1) + "/onm/*.nc")
-    ds.append(d)
+        d = xr.open_mfdataset(ppdir + str(year) + "/r" + str(i+1) + "/onm/*diaptr.nc")
+        ds.append(d)
     
-ds = xr.concat(ds, dim='r')
+    ds = xr.concat(ds, dim='r')
 
-ds['time'] = ds['time_centered'].astype("datetime64[ns]") # convert cftime to convenient form
+    ds['time'] = ds['time_centered'].astype("datetime64[ns]") # convert cftime to convenient form
 
-save_file = save_path + str(year) + "_diaptr.nc"
-ds_save = ds.load()
-ds_save.to_netcdf(save_file)
+    save_file = save_path + str(year) + "_diaptr.nc"
+    ds_save = ds.load()
+    ds_save.to_netcdf(save_file)

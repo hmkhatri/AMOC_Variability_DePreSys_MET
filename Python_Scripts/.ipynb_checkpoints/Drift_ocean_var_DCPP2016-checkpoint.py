@@ -31,9 +31,9 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
-var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
+var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
 
-year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
+year1, year2 = (1979, 1982) #2017) # range over to compute average using DCPP 2016 paper
 
 for var in var_list:
     
@@ -47,7 +47,7 @@ for var in var_list:
             
             # Read data for each hindcast for every ensemble member
             
-            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
             
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
             d = d.drop('time') # drop time coordinate as different time values create an issue in concat operation
@@ -56,7 +56,8 @@ for var in var_list:
             
         # combine data for hindcasts
         ds = xr.concat(ds, dim='start_year')
-        ds = ds.drop(['lon_bnds', 'lat_bnds', 'time_bnds'])
+        ds = ds.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
+        ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
         
         ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
         ds = ds.chunk({'start_year':1, 'time':1, 'j':50, 'i':50})
@@ -78,4 +79,3 @@ for var in var_list:
             ds_save.to_netcdf(save_file)
 
             print("File saved")
-
