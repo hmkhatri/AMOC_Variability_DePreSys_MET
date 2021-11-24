@@ -31,9 +31,9 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
-var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
+var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
 
-year1, year2 = (1979, 1982) #2017) # range over to compute average using DCPP 2016 paper
+year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
 for var in var_list:
     
