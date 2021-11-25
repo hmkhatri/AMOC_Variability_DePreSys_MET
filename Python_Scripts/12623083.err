@@ -1,0 +1,4 @@
+cpu-bind=MASK - host443, task  0  0 [210037]: mask 0x80 set
+cpu-bind=MASK - host443, task  0  0 [210643]: mask 0x80 set
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** JOB 12623083 ON host443 CANCELLED AT 2021-11-24T17:19:13 ***

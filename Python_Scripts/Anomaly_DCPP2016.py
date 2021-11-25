@@ -29,7 +29,7 @@ def Compute_area_weighted_mean(ds, area, mask, mask_val):
 
 # Paths and varnames
 
-var_list = ['hfds', 'tos', 'sos', 'mlotst', 'zos']
+var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
 
 region_list = ['Labrador_Sea', 'Irminger_Sea', 'Iceland_Basin', 'North_East_Region', 'South_West_Region', 
                'South_East_Region', 'North_Atlantic'] # mask value 0-5 for these regions, see details in the main loop 
@@ -111,12 +111,12 @@ for var in var_list:
         for mask_region in region_list:
             
             if(mask_region == 'North_Atlantic'):
-                area_weigh_val = Compute_area_weighted_mean(ds_anom[var], ds_mask['area'], ds_mask['mask_regions'], 0.)
+                area_weigh_val = Compute_area_weighted_mean(ds_anom[var], ds_mask['area'], ds_mask['mask_North_Atl'], 0.)
             else:
                 area_weigh_val = Compute_area_weighted_mean(ds_anom[var], ds_mask['area'], ds_mask['mask_regions'], mask_val)
                 mask_val = mask_val + 1
                 
-            anom_save[mask_region] = area_weigh_val
+            anom_save[mask_region] = area_weigh_val.compute()
         
         # Save file for each ensemble
         save_file = save_path +"Anomaly_" + var + "_r" + str(r+1) + ".nc"

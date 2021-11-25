@@ -1,0 +1,2 @@
+cpu-bind=MASK - host627, task  0  0 [10716]: mask 0x10 set
+cpu-bind=MASK - host627, task  0  0 [10924]: mask 0x10 set
