@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 
 ppdir="/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/"
 
-save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
 # variable list to keep in the dataset
 var_list = ['hfbasin_atlantic', 'hfbasinpmdiff_atlantic', 'hfovgyre_atlantic', 'hfovovrt_atlantic', 'sophtadv_atlantic', 
@@ -27,7 +27,7 @@ ds = []
 # Loop over year to combine indivual year files
 for year in range(1960, 2017, 1):
     
-    d = xr.open_dataset(ppdir + str(year) + "_diaptr.nc", chunks={'r':1})
+    d = xr.open_dataset(ppdir + str(year) + "_diaptr.nc", decode_times= False, chunks={'r':1})
     d = d.get(var_list)
     ds.append(d)
     
@@ -46,7 +46,7 @@ print("Data read complete")
 # lead year information. For example, for 1st DJF - consider hindcasts 1970 - 2016, for 2nd DJF consider hindcasts 1969- 2015 etc.
 # Compute the mean for all ensembles separately and substract this mean to obtain anomaly trend.
 
-year1, year2 = (1979, 2017) # DJF (1979) to DJF (2016)  
+year1, year2 = (1970, 2017) # DJF (1979) to DJF (2016)  
 
 def processDataset(ds1, year1, year2, lead_year):
     
@@ -55,9 +55,12 @@ def processDataset(ds1, year1, year2, lead_year):
     for year in range(year1, year2):
         
         # Extract relevant DJF months data and mean over the season
-        ds1 = ds.sel(start_year = year - lead_year).isel(time_counter=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time_counter')
+        #ds1 = ds.sel(start_year = year - lead_year).isel(time_counter=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time_counter')
         
-        ds_save.append(ds1)
+        # Extract monthly time-series by lead year
+        ds2 = ds1.sel(start_year = year - lead_year).isel(time_counter=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(ds1['time_counter']))))
+        
+        ds_save.append(ds2)
         
     return ds_save
 
