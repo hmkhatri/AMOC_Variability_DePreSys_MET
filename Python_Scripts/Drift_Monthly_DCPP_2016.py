@@ -54,7 +54,7 @@ for var in var_list:
         
         ds1 = []
         
-        for r in range(0,10):
+        for r in range(0,2):
             
             # Read data for each hindcast for every ensemble member
             
@@ -69,7 +69,7 @@ for var in var_list:
             ds1.append(d)
             
         ds1 = xr.concat(ds1, dim='r')
-        ds1['time_val'] = ds1['time']
+        #ds1['time_val'] = ds1['time']
         
         # drop time coordinate as different time values create an issue in concat operation
         
@@ -89,16 +89,19 @@ for var in var_list:
     print("Data read complete var = ", var)
     
     # loop over lead year and compute mean values
+        
     for lead_year in range (0,11):
     
         print("Lead Year running = ", lead_year)
+        
+        for r in range(0,10):
 
-        ds_save = processDataset(ds, year1, year2, lead_year)
-    
-        ds_save = sum(ds_save) / (year2 - year1)
+            ds_save = processDataset(ds.isel(r=r), year1, year2, lead_year)
 
-        ds_save = ds_save.compute()
-    
-        save_file = save_path +"Drift_" + var + "_Lead_Year_" + str(int(lead_year+1)) + ".nc"
-        ds_save.to_netcdf(save_file)
+            ds_save = sum(ds_save) / (year2 - year1)
+
+            ds_save = compute(ds_save)
+
+            save_file = save_path +"Drift_" + var + "_r" + str(r+1) + "_Lead_Year_" + str(int(lead_year+1)) + ".nc"
+            ds_save.to_netcdf(save_file)
 
