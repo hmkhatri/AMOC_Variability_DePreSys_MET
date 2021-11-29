@@ -1,6 +1,6 @@
 #!/bin/bash 
 #SBATCH --partition=par-single
-#SBATCH --ntasks=4
+#SBATCH --ntasks=8
 # SBATCH --partition=high-mem
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
