@@ -43,7 +43,7 @@ var_list = ['hfds', 'tos', 'sos', 'mlotst'] #, 'zos'] # ocean vars
 
 #var_list = ['psl', 'ua', 'va', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt'] # atmosphere vars
 
-year1, year2 = (1970, 2017) # range over to compute average using DCPP 2016 paper -> 1970 - 2016
+year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper -> 1979 - 2016
             
 
 for var in var_list:
@@ -54,7 +54,7 @@ for var in var_list:
         
         ds1 = []
         
-        for r in range(0,2):
+        for r in range(0,10):
             
             # Read data for each hindcast for every ensemble member
             
@@ -96,11 +96,11 @@ for var in var_list:
         
         for r in range(0,10):
 
-            ds_save = processDataset(ds.isel(r=r), year1, year2, lead_year)
+            ds_save = delayed(processDataset)(ds.isel(r=r), year1, year2, lead_year)
 
-            ds_save = sum(ds_save) / (year2 - year1)
+            ds_save = delayed(sum)(ds_save) / (year2 - year1)
 
-            ds_save = compute(ds_save)
+            ds_save = ds_save.compute()
 
             save_file = save_path +"Drift_" + var + "_r" + str(r+1) + "_Lead_Year_" + str(int(lead_year+1)) + ".nc"
             ds_save.to_netcdf(save_file)

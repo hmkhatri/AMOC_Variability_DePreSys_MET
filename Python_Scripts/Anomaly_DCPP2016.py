@@ -29,7 +29,8 @@ def Compute_area_weighted_mean(ds, area, mask, mask_val):
 
 # Paths and varnames
 
-var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+#var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+var_list = ['mlotst']
 
 region_list = ['Labrador_Sea', 'Irminger_Sea', 'Iceland_Basin', 'North_East_Region', 'South_West_Region', 
                'South_East_Region', 'North_Atlantic'] # mask value 0-5 for these regions, see details in the main loop 

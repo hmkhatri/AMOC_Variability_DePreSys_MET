@@ -31,7 +31,8 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
-var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+#var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+var_list = ['mlotst']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -60,7 +61,7 @@ for var in var_list:
         ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
         
         ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
-        ds = ds.chunk({'start_year':1, 'time':1, 'j':50, 'i':50})
+        ds = ds.chunk({'start_year':1, 'j':50, 'i':50})
         
         print("Data read complete")
         
@@ -69,9 +70,9 @@ for var in var_list:
     
             #print("Lead Year running = ", lead_year)
 
-            ds_save = processDataset(ds, year1, year2, lead_year)
+            ds_save = delayed(processDataset)(ds, year1, year2, lead_year)
     
-            ds_save = sum(ds_save) / (year2 - year1)
+            ds_save = delayed(sum)(ds_save) / (year2 - year1)
 
             ds_save = ds_save.compute()
     
