@@ -70,9 +70,9 @@ for var in var_list:
     
             #print("Lead Year running = ", lead_year)
 
-            ds_save = delayed(processDataset)(ds, year1, year2, lead_year)
+            ds_save = processDataset(ds, year1, year2, lead_year)
     
-            ds_save = delayed(sum)(ds_save) / (year2 - year1)
+            ds_save = sum(ds_save) / (year2 - year1)
 
             ds_save = ds_save.compute()
     
