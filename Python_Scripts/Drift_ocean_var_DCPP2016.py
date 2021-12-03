@@ -38,7 +38,7 @@ year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 pape
 
 for var in var_list:
     
-    for r in range(0,10):
+    for r in range(3,10):
        
         print("Var = ", var, "; Ensemble = ", r)
 
