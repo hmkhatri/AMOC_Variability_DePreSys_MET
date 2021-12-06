@@ -20,7 +20,11 @@ def processDataset(ds1, year1, year2, lead_year):
     for year in range(year1, year2):
         
         # Extract relevant DJF months data and mean over the season
-        ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time')    
+        #ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time')
+        
+        # Extract data relavant start year and sum over all hindcasts
+        ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(ds1['time']))))
+        
         ds_save.append(ds2)
         
     return ds_save
@@ -29,16 +33,20 @@ def processDataset(ds1, year1, year2, lead_year):
 
 ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
-save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
+# for DJF season only
+#save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
 
-#var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['mlotst']
+# for monthly drift
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
+
+var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+#var_list = ['mlotst']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
 for var in var_list:
     
-    for r in range(3,10):
+    for r in range(0,10):
        
         print("Var = ", var, "; Ensemble = ", r)
 

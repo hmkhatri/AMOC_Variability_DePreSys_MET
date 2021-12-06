@@ -19,8 +19,8 @@ module load jaspy #/3.7/r20181219
 # srun python3 Combine_Data_Atmosphere_var.py
 
 # srun python3 Drift_Overturning.py
-srun python Drift_ocean_var_DCPP2016.py
-# srun python3 Drift_atmosphere_var_DCPP2016.py
+# srun python Drift_ocean_var_DCPP2016.py
+srun python Drift_atmosphere_var_DCPP2016.py
 # srun python3 Drift_Monthly_DCPP_2016.py
 
 # srun python3 Drift_var_ocean.py
