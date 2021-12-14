@@ -1,7 +1,10 @@
 # Description of Notebooks
 
-| Filename | Description |
+| Filen or Directory | Description |
 | --- | --- |
-| [Jupyter Notebooks](./Notebooks) | Jupyter notebooks for data analaysis and preliminary checks for computationally-heavy python scripts |
-| [Python Scripts](./Python_Scripts) | Pyhton scripts for post-processing and generating data for further analysis |
-| [Docs](./Docs) | Information on accesing datasets used in this repo | 
+| [Checks](./Quick_Checks) | Folder contains notebooks used for performing priliminary checks and testing |
+| [Ocean Grid](./Postprocessing/Area_cell_ocean.ipynb) | Notebook for creating separate nc file for storing grid info, e.g. cell areas |
+| [Mask Regions](./Postprocessing/Mask_Regions.ipynb) | Notebook for creating regional masks, which are required for calculating domain-mean values in specific regions | 
+| [DePreSys4 Timeseries](./Analysis/Timeseries_DePreSys4_Overturning_SST_anomaly.ipynb) | Notebook for analysing timeseries of SST, SST and overturning strength in DePreSys4 hindcasts|
+| [ORAS5 Timeseries](./Analysis/Timeseries_ORAS5_SST_anomaly.ipynb) | Notebook for analysing SST/SSS timeseries in ORAS5 ECMWF reanalysis product |
+| [DePreSyss5 vs ORAS5](./Analysis/Compare_DePreSys4_ORAS5.ipynb) | Comaprison of SST/SSS anomaly in DePreSys4 vs ORAS5 |
