@@ -2,6 +2,7 @@
 import numpy as np
 import scipy as sc
 import xarray as xr
+import gsw as gsw
 import dask.distributed
 from dask.distributed import Client
 from dask import delayed
@@ -11,16 +12,19 @@ from dask import persist
 import warnings
 warnings.filterwarnings('ignore')
 
-### ------ Function to sum over selected years ----------
+### ------ Function to compute potential density and sum over selected years ----------
+
+def pdens(S,theta):
+    
+    pot_dens = gsw.density.sigma0(S, theta)
+    
+    return pot_dens
 
 def processDataset(ds1, year1, year2, lead_year):
     
     ds_save = []
     
     for year in range(year1, year2):
-        
-        # Extract relevant DJF months data and mean over the season
-        #ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(1 + 12*lead_year, 4 + 12*lead_year)).mean('time')
         
         # Extract data relavant start year and sum over all hindcasts
         ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(ds1['time']))))
@@ -33,14 +37,10 @@ def processDataset(ds1, year1, year2, lead_year):
 
 ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
-# for DJF season only
-#save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
-
 # for monthly drift
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
-var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
-#var_list = ['mlotst']
+var_list = ['sigma0_surface'] 
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -54,11 +54,16 @@ for var in var_list:
 
         for year in range(year1-10, year2, 1):
             
-            # Read data for each hindcast for every ensemble member
+            # Read T/S data for each hindcast for every ensemble member
             
-            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + "tos" + "/gn/files/d20200417/"
+            d1 = xr.open_mfdataset(ppdir + var_path + "*.nc")
             
-            d = xr.open_mfdataset(ppdir + var_path + "*.nc")
+            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + "sos" + "/gn/files/d20200417/" 
+            d2 = xr.open_mfdataset(ppdir + var_path + "*.nc")
+            
+            d = xr.merge([d1, d2])
+            
             d = d.drop('time') # drop time coordinate as different time values create an issue in concat operation
             
             ds.append(d)
@@ -77,12 +82,21 @@ for var in var_list:
         for lead_year in range (0,11):
     
             #print("Lead Year running = ", lead_year)
+        
+            #rho = xr.apply_ufunc(pdens, ds.sos, ds.tos, dask='parallelized',
+            #        output_dtypes=[ds.tos.dtype])
+            rho = pdens(ds.sos, ds.tos) 
 
-            ds_save = processDataset(ds, year1, year2, lead_year)
+            sigma0 = processDataset(rho, year1, year2, lead_year)
     
-            ds_save = sum(ds_save) / (year2 - year1)
+            sigma0 = sum(sigma0) / (year2 - year1)
 
-            ds_save = ds_save.compute()
+            sigma0 = sigma0.compute()
+            
+            ds_save = xr.dataset()
+            ds_save['sigma0'] = sigma0
+            ds_save.sigma0.attrs['standard_name'] = "Potential Density wrt zero pressure - 1000"
+            ds_save.sigma0.attrs['units'] = "kg/m3"
     
             save_file = save_path +"Drift_" + var + "_r" + str(r+1)+ "_Lead_Year_" + str(int(lead_year+1)) + ".nc"
             ds_save.to_netcdf(save_file)
