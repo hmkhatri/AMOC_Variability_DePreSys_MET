@@ -10,7 +10,7 @@ from dask import compute
 from dask import persist
 
 import warnings
-warnings.filterwarnings('ignore')
+#warnings.filterwarnings('ignore')
 
 ### ------ Function to compute potential density and sum over selected years ----------
 
@@ -62,7 +62,7 @@ for var in var_list:
             var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + "sos" + "/gn/files/d20200417/" 
             d2 = xr.open_mfdataset(ppdir + var_path + "*.nc")
             
-            d = xr.merge([d1, d2])
+            d = xr.merge([d1.tos, d2.sos])
             
             d = d.drop('time') # drop time coordinate as different time values create an issue in concat operation
             
@@ -70,31 +70,34 @@ for var in var_list:
             
         # combine data for hindcasts
         ds = xr.concat(ds, dim='start_year')
-        ds = ds.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
+        #ds = ds.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
         ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
         
         ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
-        ds = ds.chunk({'start_year':1, 'j':50, 'i':50})
+        ds = ds.chunk({'start_year':year2-year1+10, 'time':125, 'j':50, 'i':50})
         
         print("Data read complete")
+        
+        #rho = xr.apply_ufunc(pdens, ds.sos, ds.tos, dask='parallelized',
+        #        output_dtypes=[ds.tos.dtype])
+        rho = pdens(ds.sos, ds.tos)
         
         # loop over lead year and compute mean values
         for lead_year in range (0,11):
     
-            #print("Lead Year running = ", lead_year)
-        
-            #rho = xr.apply_ufunc(pdens, ds.sos, ds.tos, dask='parallelized',
-            #        output_dtypes=[ds.tos.dtype])
-            rho = pdens(ds.sos, ds.tos) 
+            #print("Lead Year running = ", lead_year) 
 
-            sigma0 = processDataset(rho, year1, year2, lead_year)
+            #sigma0 = processDataset(rho, year1, year2, lead_year)
+            sigma0 = delayed(processDataset)(rho, year1, year2, lead_year)
     
-            sigma0 = sum(sigma0) / (year2 - year1)
+            #sigma0 = sum(sigma0) / (year2 - year1)
+            sigma0 = delayed(sum)(sigma0) / (year2 - year1)
 
-            sigma0 = sigma0.compute()
+            #sigma0 = sigma0.compute()
+            sigma0 = compute(sigma0, scheduler="processes")
             
-            ds_save = xr.dataset()
-            ds_save['sigma0'] = sigma0
+            ds_save = xr.Dataset()
+            ds_save['sigma0'] = sigma0.drop('start_year')
             ds_save.sigma0.attrs['standard_name'] = "Potential Density wrt zero pressure - 1000"
             ds_save.sigma0.attrs['units'] = "kg/m3"
     
