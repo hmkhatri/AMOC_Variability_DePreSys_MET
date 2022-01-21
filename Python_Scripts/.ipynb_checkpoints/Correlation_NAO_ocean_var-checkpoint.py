@@ -66,6 +66,8 @@ for r in range (0,10):
 ds_drift = xr.concat(ds_drift, dim='r')
 ds_drift = ds_drift.drop('time')
 
+print("Drift Data read complete")
+
 # Read full data
 for r in range(0,1):
        
