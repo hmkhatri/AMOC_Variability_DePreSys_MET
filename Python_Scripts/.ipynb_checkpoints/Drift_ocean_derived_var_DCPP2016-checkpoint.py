@@ -56,11 +56,11 @@ if __name__ == '__main__':
 
     var_list = ['sigma0_surface'] 
 
-    year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
+    year1, year2 = (1979, 1990) # range over to compute average using DCPP 2016 paper
 
     for var in var_list:
 
-        for r in range(0,10):
+        for r in range(0,1):
 
             print("Var = ", var, "; Ensemble = ", r)
 
