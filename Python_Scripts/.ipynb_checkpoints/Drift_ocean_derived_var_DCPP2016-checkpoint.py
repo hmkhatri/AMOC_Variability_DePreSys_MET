@@ -8,11 +8,12 @@ from dask.distributed import Client, LocalCluster
 from dask import delayed
 from dask import compute
 from dask import persist
+from dask.diagnostics import ProgressBar
 
 import warnings
 warnings.filterwarnings('ignore')
 
-from dask_mpi import initialize
+#from dask_mpi import initialize
 
 #cluster = SLURMCluster(cores=8,memory="16GB")
 #cluster.adapt(minimum=0, maximum=8)
@@ -22,9 +23,9 @@ if __name__ == '__main__':
     
     #cluster = LocalCluster()
     
-    initialize()
-    client = Client()
-    print(client)
+    #initialize()
+    #client = Client()
+    #print(client)
 
     ### ------ Function to compute potential density and sum over selected years ----------
 
@@ -34,14 +35,20 @@ if __name__ == '__main__':
 
         return pot_dens
 
-    def processDataset(ds1, year1, year2, lead_year):
+    def processDataset(S, T, year1, year2, lead_year):
 
         ds_save = []
 
         for year in range(year1, year2):
 
             # Extract data relavant start year and sum over all hindcasts
-            ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(ds1['time']))))
+            
+            #ds2 = ds1.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(ds1['time']))))
+            
+            tmp_S = S.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(S['time']))))
+            tmp_theta = T.sel(start_year = year - lead_year).isel(time=slice(12*lead_year, np.minimum(12 + 12*lead_year, len(T['time']))))
+            
+            ds2 = pdens(tmp_S, tmp_theta)
 
             ds_save.append(ds2)
 
@@ -56,11 +63,11 @@ if __name__ == '__main__':
 
     var_list = ['sigma0_surface'] 
 
-    year1, year2 = (1979, 1990) # range over to compute average using DCPP 2016 paper
+    year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
     for var in var_list:
 
-        for r in range(0,1):
+        for r in range(0,10):
 
             print("Var = ", var, "; Ensemble = ", r)
 
@@ -88,14 +95,14 @@ if __name__ == '__main__':
             ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
 
             ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
-            ds = ds.chunk({'start_year':-1, 'time':-1, 'j':50, 'i':50})
+            ds = ds.chunk({'start_year':-1, 'time':-1, 'j':25, 'i':25})
 
             print("Data read complete")
 
             #rho = xr.apply_ufunc(pdens, ds.sos, ds.tos, dask='parallelized',
             #        output_dtypes=[ds.tos.dtype])
             #rho = pdens(ds.sos, ds.tos)
-            rho = delayed(pdens)(ds.sos, ds.tos)
+            #rho = delayed(pdens)(ds.sos, ds.tos)
 
             # loop over lead year and compute mean values
             for lead_year in range (0,11):
@@ -103,16 +110,18 @@ if __name__ == '__main__':
                 #print("Lead Year running = ", lead_year) 
 
                 #sigma0 = processDataset(rho, year1, year2, lead_year)
-                sigma0 = delayed(processDataset)(rho, year1, year2, lead_year)
+                #sigma0 = delayed(processDataset)(rho, year1, year2, lead_year)
+                sigma0 = processDataset(ds.sos, ds.tos, year1, year2, lead_year)
 
-                #sigma0 = sum(sigma0) / (year2 - year1)
-                sigma0 = delayed(sum)(sigma0) / (year2 - year1)
-
-                sigma0 = sigma0.compute() #scheduler="processes")
+                sigma0 = sum(sigma0) / (year2 - year1)
+                #sigma0 = delayed(sum)(sigma0) / (year2 - year1)
+                
+                with ProgressBar():
+                    sigma0 = sigma0.compute() #scheduler="processes")
                 #sigma0 = compute(sigma0) #, scheduler="processes")
 
                 ds_save = xr.Dataset()
-                ds_save['sigma0'] = sigma0.drop('start_year')
+                ds_save['sigma0'] = sigma0
                 ds_save.sigma0.attrs['standard_name'] = "Potential Density wrt zero pressure - 1000"
                 ds_save.sigma0.attrs['units'] = "kg/m3"
 
