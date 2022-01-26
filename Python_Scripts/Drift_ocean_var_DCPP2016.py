@@ -39,8 +39,8 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 # for monthly drift
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
-var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
-#var_list = ['mlotst']
+#var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
+var_list = ['mlotst']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -56,7 +56,7 @@ for var in var_list:
             
             # Read data for each hindcast for every ensemble member
             
-            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/"
             
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
             d = d.drop('time') # drop time coordinate as different time values create an issue in concat operation
