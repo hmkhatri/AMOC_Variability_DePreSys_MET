@@ -52,7 +52,9 @@ def processDataset(S, T, year1, year2, lead_year):
                           lead_year).isel(time=slice(12*lead_year, 
                                                      np.minimum(12 + 12*lead_year, len(T['time']))))
             
-        ds2 = pdens(tmp_S, tmp_theta)
+        #ds2 = delayed(pdens)(tmp_S, tmp_theta)
+        #ds2 = pdens(tmp_S, tmp_theta)
+        ds2 = xr.apply_ufunc(pdens, tmp_S, tmp_theta, dask='parallelized', output_dtypes=[tmp_S.dtype])
 
         ds_save.append(ds2)
 
@@ -71,7 +73,7 @@ year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 pape
 
 for var in var_list:
 
-    for r in range(1,2):
+    for r in range(1,3):
 
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -98,7 +100,7 @@ for var in var_list:
         ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
 
         ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
-        ds = ds.chunk({'start_year':-1, 'time':-1, 'j':25, 'i':25})
+        ds = ds.chunk({'time':12, 'j':25, 'i':25})
 
         print("Data read complete")
 
@@ -108,7 +110,7 @@ for var in var_list:
         #rho = delayed(pdens)(ds.sos, ds.tos)
 
         # loop over lead year and compute mean values
-        for lead_year in range (0,11):
+        for lead_year in range (8,11):
 
             #print("Lead Year running = ", lead_year) 
 

@@ -27,13 +27,13 @@ module load eb/OpenMPI/gcc/4.0.0
 # srun python Drift_ocean_var_DCPP2016.py
 # srun python Drift_atmosphere_var_DCPP2016.py
 # srun python3 Drift_Monthly_DCPP_2016.py
-mpirun -n 8 python Drift_ocean_derived_var_DCPP2016.py
+# mpirun -n 8 python Drift_ocean_derived_var_DCPP2016.py
 
 # srun python3 Drift_var_ocean.py
 # srun python3 Drift_var_atmosphere.py
 # srun python3 Drift_combine_yearwise.py
 
-# srun python3 Anomaly_DCPP2016.py
+mpirun -n 8 python Anomaly_DCPP2016.py
 # srun python Anomaly_SLP_NAO_compute.py
 
 # srun python Correlation_NAO_ocean_var.py
