@@ -1,7 +1,7 @@
 ## ------------------------------------ ##
 
 # The script is for computing anomalies for ocean variables for all hindcasts. The code reads through the full dataset and 
-# then computes the seasonal means. The mean model drift pattern is then subtracted for all lead years. 
+# then computes the seasonal means (or monthly means). The mean model drift pattern is then subtracted for all lead years. 
 # The area-weighted mean anomalies are computed for different regions as defined in Mask_Regions notebook and 
 # saved in separate nc files for further analysis. 
 
@@ -20,6 +20,11 @@ from dask import persist
 import warnings
 warnings.filterwarnings('ignore')
 
+from dask_mpi import initialize
+
+initialize()
+client = Client()
+
 # Function to compute area-weighted mean
 def Compute_area_weighted_mean(ds, area, mask, mask_val): 
     
@@ -32,15 +37,16 @@ def Compute_area_weighted_mean(ds, area, mask, mask_val):
 
 # Paths and varnames
 
-#var_list = ['hfds', 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['mlotst']
+var_list = ['hfds', 'tos', 'sos', 'mlotst'] #, 'zos']
+#var_list = ['mlotst']
 
 region_list = ['Labrador_Sea', 'Irminger_Sea', 'Iceland_Basin', 'North_East_Region', 'South_West_Region', 
                'South_East_Region', 'North_Atlantic'] # mask value 0-5 for these regions, see details in the main loop 
 
 ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
-ppdir_drift="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
+#ppdir_drift="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_2016_DCPP/"
+ppdir_drift="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Anomaly_Compute/"
 
@@ -58,18 +64,31 @@ for var in var_list:
     # First read data for the mean model drift 
     ds_drift = []
     
-    for lead_year in range(0, 11):
+    for r in range(0, 10):
 
         ds1 =[]
-        for r in range(1,11):
+        for lead_year in range(0,11):
 
-            d = xr.open_dataset(ppdir_drift + "Drift_" + var + "_r" + str(r) + "_Lead_Year_" + str(lead_year + 1) + ".nc", decode_times= False)
+            #d = xr.open_dataset(ppdir_drift + "Drift_" + var + "_r" + str(r) + "_Lead_Year_" + str(lead_year + 1) + ".nc", decode_times= False)
+            
+            d = xr.open_dataset(ppdir_drift + var + "/Drift_"+ var + "_r" + 
+                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc")
+            d = d.assign(time = np.arange(lead_year*12, 12*lead_year + 
+                                          np.minimum(12, len(d['time'])), 1))
+        
             ds1.append(d)
-
-        ds1 = xr.concat(ds1, dim='ensemble')
+            
+        ds1 = xr.concat(ds1, dim='time')
         ds_drift.append(ds1)
 
-    ds_drift = xr.concat(ds_drift, dim='lead_year')
+        #ds1 = xr.concat(ds1, dim='ensemble')
+        #ds_drift.append(ds1)
+
+    #ds_drift = xr.concat(ds_drift, dim='lead_year')
+    
+    ds_drift = xr.concat(ds_drift, dim='r')
+    ds_drift = ds_drift.drop('time')
+    #ds_drift = ds_drift.chunk({'time':1})
     
     # Read data for all hindcasts 
     for r in range(0,10):
@@ -80,7 +99,7 @@ for var in var_list:
         
         for year in range(year1, year2, 1):
             
-            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
+            var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/"
             
             d = xr.open_mfdataset(ppdir + var_path + "*.nc")
             d['time_val'] = d['time'] # dropping time coordinate is required; otherwise xarray concat does not work properly
@@ -91,22 +110,24 @@ for var in var_list:
         # combine data for hindcasts
         ds = xr.concat(ds, dim='start_year')
         ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
-        ds = ds.chunk({'start_year':1})
+        ds = ds.chunk({'start_year':10, 'time':12})
         
         # Compute seasonal means and then isolate DJF season
-        ds = ds.assign_coords(time=ds['time_val'].isel(start_year=0)) # this is just to get seasonal averaging work
+        #ds = ds.assign_coords(time=ds['time_val'].isel(start_year=0)) # this is just to get seasonal averaging work
 
-        ds_resam = ds.resample(time='QS-DEC').mean('time')
-        ds_resam = ds_resam.sel(time = ds_resam['time.season'] == 'DJF')
+        #ds_resam = ds.resample(time='QS-DEC').mean('time')
+        #ds_resam = ds_resam.sel(time = ds_resam['time.season'] == 'DJF')
 
         # again drop time and change names to be consistent with ds_drift
-        ds_resam = ds_resam.drop('time')
-        ds_resam = ds_resam.rename({'time':'lead_year'})
+        #ds_resam = ds_resam.drop('time')
+        #ds_resam = ds_resam.rename({'time':'lead_year'})
 
-        ds_resam = ds_resam.transpose('start_year','lead_year','j','i')
+        #ds_resam = ds_resam.transpose('start_year','lead_year','j','i')
         
         # compute anomaly
-        ds_anom = ds_resam - ds_drift.isel(ensemble = r)
+        #ds_anom = ds_resam - ds_drift.isel(ensemble = r)
+        
+        ds_anom = ds - ds_drift.isel(r = r)
 
         # compute area-weighted mean anomlies for regions
         mask_val = 0.
@@ -127,3 +148,5 @@ for var in var_list:
         anom_save.to_netcdf(save_file)
 
         print("File saved")
+
+client.close()
