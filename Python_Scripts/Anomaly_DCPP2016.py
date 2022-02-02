@@ -88,7 +88,7 @@ for var in var_list:
     
     ds_drift = xr.concat(ds_drift, dim='r')
     ds_drift = ds_drift.drop('time')
-    ds_drift = ds_drift.chunk({'time':1})
+    #ds_drift = ds_drift.chunk({'time':1})
     
     # Read data for all hindcasts 
     for r in range(0,10):
@@ -110,7 +110,7 @@ for var in var_list:
         # combine data for hindcasts
         ds = xr.concat(ds, dim='start_year')
         ds = ds.isel(i=slice(749,1199), j = slice(699, 1149))
-        ds = ds.chunk({'start_year':1, 'time':1})
+        ds = ds.chunk({'start_year':10, 'time':12})
         
         # Compute seasonal means and then isolate DJF season
         #ds = ds.assign_coords(time=ds['time_val'].isel(start_year=0)) # this is just to get seasonal averaging work
@@ -127,7 +127,7 @@ for var in var_list:
         # compute anomaly
         #ds_anom = ds_resam - ds_drift.isel(ensemble = r)
         
-        ds_anom = ds - ds_drift.isel(ensemble = r)
+        ds_anom = ds - ds_drift.isel(r = r)
 
         # compute area-weighted mean anomlies for regions
         mask_val = 0.

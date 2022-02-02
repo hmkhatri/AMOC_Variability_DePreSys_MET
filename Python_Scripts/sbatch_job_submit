@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=par-multi 
+# SBATCH --partition=par-multi 
 # SBATCH --partition=par-single
-#SBATCH --ntasks=8
+# SBATCH --ntasks=16
 # SBATCH --partition=high-mem
 # SBATCH --mem=64GB
-# SBATCH --partition=short-serial
+#SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
@@ -33,8 +33,10 @@ module load eb/OpenMPI/gcc/4.0.0
 # srun python3 Drift_var_atmosphere.py
 # srun python3 Drift_combine_yearwise.py
 
-mpirun -n 8 python Anomaly_DCPP2016.py
-# srun python Anomaly_SLP_NAO_compute.py
+# mpirun -n 16 python Anomaly_DCPP2016.py
+srun python Anomaly_SLP_NAO_compute.py
+
+# mpirun -n 8 python Composite_Diagnostics_NAO_phases.py
 
 # srun python Correlation_NAO_ocean_var.py
 
