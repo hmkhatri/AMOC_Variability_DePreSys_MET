@@ -53,8 +53,8 @@ tim_ind = 4 # could be any index (0, 4, 8, ... are for DJF)
 ind_NAOp = xr.where(NAO_season.isel(time=tim_ind) >= NAO_cut, 1, 0)
 ind_NAOn = xr.where(NAO_season.isel(time=tim_ind) <= -NAO_cut, 1, 0)
 
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 if (case == 'NAOp'):
     count_NAO = ind_NAOp
