@@ -12,4 +12,5 @@
 | [Drift_Overturning.py](./Drift_Overturning.py) | To compute model drift in overturning and heat/salt transport diagnotics |
 | [Anomaly_DCPP2016.py](./Anomaly_DCPP2016.py) | To compute time series of domain-mean anomalies by removing model drift in different diagnostics | 
 | [Anomaly_SLP_NAO_compute.py](./Anomaly_SLP_NAO_compute.py) | To compute time series of NAO indices using sea-level pressure anomalies |
+| [Combine_Data_Atmosphere_var.py](./Combine_Data_Atmosphere_var.py) | To save composite timeseries of ocean vars corresponding to NAO extreme members |
 | [sbatch_job_submit](./sbatch_job_submit) | To submit python jobs on slurm cluster | 
