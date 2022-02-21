@@ -1,0 +1,19 @@
+cpu-bind=MASK - host614, task  0  0 [45565]: mask 0xff01fe00 set
+cpu-bind=MASK - host614, task  1  1 [45906]: mask 0x1000000 set
+cpu-bind=MASK - host614, task  3  3 [45909]: mask 0x2000000 set
+cpu-bind=MASK - host614, task  0  0 [45905]: mask 0x200 set
+cpu-bind=MASK - host614, task  6  6 [45912]: mask 0x1000 set
+cpu-bind=MASK - host614, task  2  2 [45907]: mask 0x400 set
+cpu-bind=MASK - host614, task  4  4 [45910]: mask 0x800 set
+cpu-bind=MASK - host614, task  5  5 [45911]: mask 0x4000000 set
+cpu-bind=MASK - host614, task  7  7 [45914]: mask 0x8000000 set
+cpu-bind=MASK - host614, task  9  9 [45916]: mask 0x10000000 set
+cpu-bind=MASK - host614, task 10 10 [45917]: mask 0x4000 set
+cpu-bind=MASK - host614, task 11 11 [45918]: mask 0x20000000 set
+cpu-bind=MASK - host614, task 12 12 [45919]: mask 0x8000 set
+cpu-bind=MASK - host614, task 13 13 [45920]: mask 0x40000000 set
+cpu-bind=MASK - host614, task  8  8 [45915]: mask 0x2000 set
+cpu-bind=MASK - host614, task 14 14 [45921]: mask 0x10000 set
+cpu-bind=MASK - host614, task 15 15 [45922]: mask 0x80000000 set
+slurmstepd: error: Detected 43 oom-kill event(s) in step 25057979.0 cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
+srun: error: host614: task 13: Out Of Memory

@@ -30,12 +30,12 @@ ppdir_NAO="/home/users/hkhatri/DePreSys4_Data/Data_Anomaly_Compute/NAO/"
 
 ppdir_drift="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
     
-save_path="/home/users/hkhatri/DePreSys4_Data/Data_Composite/"
+save_path="/home/users/hkhatri/DePreSys4_Data/Data_Composite/time_series/"
 
 year1, year2 = (1960, 2017)
 
 #var_list = ['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-var_list = ['tauu', 'tauv'] #atmosphere vars
+var_list = ['pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly.nc")
@@ -49,13 +49,13 @@ NAO = NAO.isel(time=slice(1,len(NAO.time)-1)) # get rid of first Nov and last Ma
 NAO_season = NAO.resample(time='QS-DEC').mean('time')
 
 NAO_cut = 2.5 # based on plot for individual NAO values
-tim_ind = 20 # could be any index (0, 4, 8, ... are for DJF)
+tim_ind = 4 # could be any index (0, 4, 8, ... are for DJF)
 
 ind_NAOp = xr.where(NAO_season.isel(time=tim_ind) >= NAO_cut, 1, 0)
 ind_NAOn = xr.where(NAO_season.isel(time=tim_ind) <= -NAO_cut, 1, 0)
 
-#case = 'NAOp' 
-case = 'NAOn'
+case = 'NAOp' 
+#case = 'NAOn'
 
 if (case == 'NAOp'):
     count_NAO = ind_NAOp
@@ -128,7 +128,7 @@ for var in var_list:
     
     comp_save = xr.Dataset()
     comp_save[var] = ds_season
-    save_file = save_path + "Composite_" + case + "_" + var + ".nc"
+    save_file = save_path + "Composite_" + case + "_" + var + '_tim_ind_' + str(tim_ind) + ".nc"
     comp_save.to_netcdf(save_file)
     
     print("Data saved successfully")
