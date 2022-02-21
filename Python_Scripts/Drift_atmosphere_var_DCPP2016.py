@@ -39,13 +39,13 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
 #var_list = ['va', 'ua'] 
-var_list = ['psl', 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
+var_list = ['psl']#, 'sfcWind', 'tas', 'pr', 'evspsbl', 'tauu', 'tauv','clt']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
 for var in var_list:
     
-    for r in range(0,10):
+    for r in range(0,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -75,7 +75,7 @@ for var in var_list:
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range (0,11):
+        for lead_year in range (0,1):
     
             #print("Lead Year running = ", lead_year)
 
