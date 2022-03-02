@@ -101,7 +101,7 @@ for var in var_list:
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range (0,2):
+        for lead_year in range(0,2):
     
             #print("Lead Year running = ", lead_year)
 

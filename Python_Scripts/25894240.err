@@ -1,0 +1,126 @@
+cpu-bind=MASK - host210, task  0  0 [9089]: mask 0xf0f set
+cpu-bind=MASK - host210, task  0  0 [9418]: mask 0xf0f set
+distributed.http.proxy - INFO - To route to workers diagnostics web server please install jupyter-server-proxy: python -m pip install jupyter-server-proxy
+distributed.scheduler - INFO - Clear task state
+distributed.scheduler - INFO -   Scheduler at:  tcp://172.26.66.66:43278
+distributed.scheduler - INFO -   dashboard at:                     :8787
+distributed.scheduler - INFO - Receive client connection: Client-ad4e0415-93f5-11ec-a4cc-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:34032
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:34032
+distributed.worker - INFO -          dashboard at:         172.26.66.66:41771
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-l637tvqj
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:45470
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:45470
+distributed.worker - INFO -          dashboard at:         172.26.66.66:33381
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-rk6wbgf1
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:44428
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:44428
+distributed.worker - INFO -          dashboard at:         172.26.66.66:42891
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-17rlgonm
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:45945
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:45945
+distributed.worker - INFO -          dashboard at:         172.26.66.66:35682
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-omwrdusz
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:45964
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:45964
+distributed.worker - INFO -          dashboard at:         172.26.66.66:39237
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-ot0kyrxk
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:45470', name: 4, status: undefined, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:45470
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -       Start worker at:   tcp://172.26.66.66:39702
+distributed.worker - INFO -          Listening to:   tcp://172.26.66.66:39702
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -          dashboard at:         172.26.66.66:44054
+distributed.worker - INFO - Waiting to connect to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   3.91 GiB
+distributed.worker - INFO -       Local Directory: /home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/dask-worker-space/worker-zcdxzuaw
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:44428', name: 7, status: undefined, memory: 0, processing: 0>
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:44428
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:34032', name: 2, status: undefined, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:34032
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:45945', name: 5, status: undefined, memory: 0, processing: 0>
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:45945
+distributed.core - INFO - Starting established connection
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:45964', name: 3, status: undefined, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:45964
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Register worker <WorkerState 'tcp://172.26.66.66:39702', name: 6, status: undefined, memory: 0, processing: 0>
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Starting worker compute stream, tcp://172.26.66.66:39702
+distributed.core - INFO - Starting established connection
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://172.26.66.66:43278
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-18ce3480-93f7-11ec-a4d0-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-1c316c92-93f7-11ec-a4cf-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-1d315b14-93f7-11ec-a4ce-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-1d3a240c-93f7-11ec-a4d2-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-1d34b28e-93f7-11ec-a4cd-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-1e327bd6-93f7-11ec-a4d1-f452141d4040
+distributed.core - INFO - Starting established connection
+distributed.core - INFO - Event loop was unresponsive in Worker for 3.35s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.core - INFO - Event loop was unresponsive in Worker for 30.12s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.core - INFO - Event loop was unresponsive in Worker for 22.94s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.core - INFO - Event loop was unresponsive in Worker for 31.89s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.core - INFO - Event loop was unresponsive in Worker for 31.21s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.scheduler - INFO - Remove worker <WorkerState 'tcp://172.26.66.66:34032', name: 2, status: running, memory: 8, processing: 8>
+distributed.core - INFO - Removing comms to tcp://172.26.66.66:34032
+distributed.scheduler - INFO - Remove client Client-worker-1d34b28e-93f7-11ec-a4cd-f452141d4040
+distributed.scheduler - INFO - Close client connection: Client-worker-1d34b28e-93f7-11ec-a4cd-f452141d4040
+slurmstepd: error: Detected 1 oom-kill event(s) in step 25894240.0 cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
+srun: error: host210: task 0: Out Of Memory
+[mpiexec@host210.jc.rl.ac.uk] HYDT_bscu_wait_for_completion (tools/bootstrap/utils/bscu_wait.c:73): one of the processes terminated badly; aborting
+[mpiexec@host210.jc.rl.ac.uk] HYDT_bsci_wait_for_completion (tools/bootstrap/src/bsci_wait.c:21): launcher returned error waiting for completion
+[mpiexec@host210.jc.rl.ac.uk] HYD_pmci_wait_for_completion (pm/pmiserv/pmiserv_pmci.c:179): launcher returned error waiting for completion
+[mpiexec@host210.jc.rl.ac.uk] main (ui/mpich/mpiexec.c:326): process manager error waiting for completion
+slurmstepd: error: Detected 1 oom-kill event(s) in step 25894240.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.

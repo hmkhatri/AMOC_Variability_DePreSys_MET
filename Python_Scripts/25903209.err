@@ -1,0 +1,5 @@
+cpu-bind=MASK - host639, task  0  0 [30549]: mask 0x2 set
+cpu-bind=MASK - host639, task  0  0 [30866]: mask 0x2 set
+srun: error: host639: task 0: Out Of Memory
+slurmstepd: error: Detected 1 oom-kill event(s) in step 25903209.0 cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
+slurmstepd: error: Detected 1 oom-kill event(s) in step 25903209.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
