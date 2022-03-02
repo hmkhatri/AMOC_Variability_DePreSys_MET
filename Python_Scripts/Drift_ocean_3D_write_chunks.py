@@ -4,8 +4,6 @@ import scipy as sc
 import xarray as xr
 import gc
 import dask.distributed
-import itertools
-from mpi4py import MPI
 
 from dask_mpi import initialize
 initialize()
@@ -101,7 +99,7 @@ for var in var_list:
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range (0,1):
+        for lead_year in range(0,1):
     
             #print("Lead Year running = ", lead_year)
 
