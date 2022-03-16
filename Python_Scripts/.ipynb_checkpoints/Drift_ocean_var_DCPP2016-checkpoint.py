@@ -155,19 +155,16 @@ for var in var_list:
 
             print("File saved for Lear Year = ", lead_year+1)
             
-            #del ds_save, ds_var
-            #ds_var.close()
+            client.cancel([ds_var, ds_save])
+            ds_save.close()
+            ds_var.close()
             
             process = psutil.Process(os.getpid())
             print("Memory usage in GB = ", process.memory_info().rss/1e9)
             
-            client.cancel([ds_var, ds_save])
-            
-            ds_save.close()
-            
-            gc.collect()
-            
+            #gc.collect()
+        
+        client.cancel([ds])
         ds.close()
-        del ds
 
 client.close()
