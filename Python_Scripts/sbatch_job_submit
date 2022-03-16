@@ -10,7 +10,7 @@
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=24:00:00
+#SBATCH --time=12:00:00
 
 # load python3 module
 # module add jaspy/3.7/r20181219
@@ -28,7 +28,7 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python3 Drift_Overturning.py
 
-mpirun python Drift_ocean_var_DCPP2016.py
+mpirun -np 32 python Drift_ocean_var_DCPP2016.py
 
 # mpirun -n 32 python Drift_ocean_3D_write_chunks.py
 # mpirun python Drift_ocean_3D_save_monthwise.py

@@ -3,10 +3,10 @@
 | Filename | Description |
 | --- | --- |
 | [Overturning_transport_depth_sigma.py](./Overturning_transport_depth_sigma.py) | To compute meridional tranpsort in density layers and depth of density layers |
-| [Combine_Data_Atmosphere_var.py](./Combine_Data_Atmosphere_var.py) | To save different atmospheric diagnostics in the same file |
-| [Combine_Data_Ocean_Surface_grid_T.py](./Combine_Data_Ocean_Surface_grid_T.py) | To save different ocean diagnostics in the same file |
-| [Combine_Data_Overturning.py](./Combine_Data_Overturning.py) | To save overturning and heat/salt transport diagnostics in the same file |
-| [Combine_Data_Atmosphere_var.py](./Combine_Data_Atmosphere_var.py) | To save composite timeseries of ocean vars corresponding to NAO extreme members |
+| [Combine_Data_Atmosphere_var.py](./Combine_Files/Combine_Data_Atmosphere_var.py) | To save different atmospheric diagnostics in the same file |
+| [Combine_Data_Ocean_Surface_grid_T.py](./Combine_Files/Combine_Data_Ocean_Surface_grid_T.py) | To save different ocean diagnostics in the same file |
+| [Combine_Data_Overturning.py](./Combine_Files/Combine_Data_Overturning.py) | To save overturning and heat/salt transport diagnostics in the same file |
+| [Combine_Data_Atmosphere_var.py](./Combine_Files/Combine_Data_Atmosphere_var.py) | To save composite timeseries of ocean vars corresponding to NAO extreme members |
 | [Drift_atmosphere_var_DCPP2016.py](./Drift_atmosphere_var_DCPP2016.py) | To compute model drift in atmospheric diagnostics and save drift data in nc files | 
 | [Drift_ocean_var_DCPP2016.py](./Drift_ocean_var_DCPP2016.py) | To compute model drift in ocean diagnostics and save drift data in nc files |
 | [Drift_ocean_derived_var_DCPP2016.py](./Drift_ocean_derived_var_DCPP2016.py) | To compute model drift in potential density computed using T/S ocean diagnostics and save drift data in nc files |

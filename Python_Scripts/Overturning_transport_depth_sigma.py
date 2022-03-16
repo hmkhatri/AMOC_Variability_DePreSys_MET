@@ -110,8 +110,8 @@ for r in range(2,3):
         for mon in range(97,125): #(0,5)
             
             # extract individual time steps
-            ds1 = ds.isel(time = mon)
-            #ds1 = ds.isel(time = slice(mon*25, mon*25+25))
+            #ds1 = ds.isel(time = mon)
+            ds1 = ds.isel(time = slice(mon*25, mon*25+25))
             
             # create outer depth levels
             level_outer_data = (cf_xarray.bounds_to_vertices(ds.lev_bnds.isel(time=0),'bnds').load().data)
@@ -148,8 +148,8 @@ for r in range(2,3):
             ds_save['depth_sigma'] =(depth_sigma.rename({'sigma0':
                                                         'sigma0_bnds'})).astype(np.float32)
 
-            ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
-            #ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
+            #ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
+            ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
 
             ds_save = ds_save.persist() #client.persist(ds_save).results()
 

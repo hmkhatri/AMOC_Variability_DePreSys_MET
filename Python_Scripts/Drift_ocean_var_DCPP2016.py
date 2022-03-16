@@ -14,8 +14,8 @@ import dask
 from dask_mpi import initialize
 initialize()
 
-#import warnings
-#warnings.filterwarnings('ignore')
+import warnings
+warnings.filterwarnings('ignore')
 
 from dask.distributed import Client, performance_report
 client = Client()
@@ -81,7 +81,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(5,3,-1):
+    for r in range(4,5,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -91,13 +91,15 @@ for var in var_list:
             
             # Read data for each hindcast for every ensemble member
             
-            var_path = (ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
+            var_path = (ppdir + "s" + str(year) +"-r" + str(r+1) + 
+                        "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
             
             #d = xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset,
             #                      decode_times=False, engine='netcdf4')
             # netdcf4 engine seems to be faster than h5netcdf in reading files
             
-            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, chunks={'lev':1, 'time':1},
+            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
+                                   chunks={'lev':1, 'time':1},
                                    decode_times=False, engine='netcdf4') as d:
                 d = d
             
@@ -166,5 +168,8 @@ for var in var_list:
         
         client.cancel([ds])
         ds.close()
-
+        del ds
+        
+        print("Completed r = ", r+1)
+        
 client.close()
