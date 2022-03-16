@@ -1,22 +1,23 @@
 #!/bin/bash
-#SBATCH --partition=par-multi 
+# SBATCH --partition=par-multi 
 # SBATCH --partition=par-single
 # SBATCH --partition=test
-#SBATCH --ntasks=32
-# SBATCH --partition=high-mem
-# SBATCH --mem=64GB
+# SBATCH --ntasks=16
+#SBATCH --partition=high-mem
+#SBATCH --mem=64GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 
 # load python3 module
-# module add jaspy/3.7/r20181219
+#module add jaspy #/3.7/r20181219
 
 source /home/users/hkhatri/miniconda3/bin/activate
-# module load eb/OpenMPI/gcc/4.0.0
+#module load eb/OpenMPI/gcc/4.0.0
+
 
 # Execute python script
 
@@ -24,14 +25,12 @@ source /home/users/hkhatri/miniconda3/bin/activate
 # srun python3 Combine_Data_Overturning.py
 # srun python3 Combine_Data_Atmosphere_var.py
 
-# srun python Overturning_transport_depth_sigma.py
+mpirun python Overturning_transport_depth_sigma.py
 
 # srun python3 Drift_Overturning.py
-
-mpirun -np 32 python Drift_ocean_var_DCPP2016.py
-
+# mpirun -n 8 python Drift_ocean_var_DCPP2016.py
 # mpirun -n 32 python Drift_ocean_3D_write_chunks.py
-# mpirun python Drift_ocean_3D_save_monthwise.py
+# srun python Drift_ocean_3D_save_monthwise.py
 # srun python Drift_atmosphere_var_DCPP2016.py
 # srun python3 Drift_Monthly_DCPP_2016.py
 # mpirun -n 8 python Drift_ocean_derived_var_DCPP2016.py

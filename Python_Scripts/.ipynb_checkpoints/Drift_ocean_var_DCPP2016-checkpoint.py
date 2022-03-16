@@ -157,7 +157,7 @@ for var in var_list:
 
             print("File saved for Lear Year = ", lead_year+1)
             
-            client.cancel([ds_var, ds_save])
+            #client.cancel([ds_var, ds_save])
             ds_save.close()
             ds_var.close()
             
@@ -166,7 +166,7 @@ for var in var_list:
             
             #gc.collect()
         
-        client.cancel([ds])
+        #client.cancel([ds])
         ds.close()
         del ds
         

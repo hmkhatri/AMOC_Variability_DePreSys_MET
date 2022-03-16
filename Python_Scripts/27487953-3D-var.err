@@ -1,0 +1,96 @@
+HDF5-DIAG: Error detected in HDF5 (1.12.1) thread 1:
+  #000: H5Dio.c line 179 in H5Dread(): can't read data
+    major: Dataset
+    minor: Read failed
+  #001: H5VLcallback.c line 2011 in H5VL_dataset_read(): dataset read failed
+    major: Virtual Object Layer
+    minor: Read failed
+  #002: H5VLcallback.c line 1978 in H5VL__dataset_read(): dataset read failed
+    major: Virtual Object Layer
+    minor: Read failed
+  #003: H5VLnative_dataset.c line 166 in H5VL__native_dataset_read(): can't read data
+    major: Dataset
+    minor: Read failed
+  #004: H5Dio.c line 545 in H5D__read(): can't read data
+    major: Dataset
+    minor: Read failed
+  #005: H5Dchunk.c line 2549 in H5D__chunk_read(): unable to read raw data chunk
+    major: Low-level I/O
+    minor: Read failed
+  #006: H5Dchunk.c line 3904 in H5D__chunk_lock(): data pipeline read failed
+    major: Dataset
+    minor: Filter operation failed
+  #007: H5Z.c line 1400 in H5Z_pipeline(): filter returned failure during read
+    major: Data filters
+    minor: Read failed
+  #008: H5Zdeflate.c line 118 in H5Z__filter_deflate(): inflate() failed
+    major: Data filters
+    minor: Unable to initialize object
+Traceback (most recent call last):
+  File "/home/users/hkhatri/Git_Repo/AMOC_Variability_DePreSys_MET/Python_Scripts/Drift_ocean_var_DCPP2016.py", line 119, in <module>
+    ds_save = ds_var.compute()
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/dataset.py", line 1026, in compute
+    return new.load(**kwargs)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/dataset.py", line 860, in load
+    evaluated_data = da.compute(*lazy_data.values(), **kwargs)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/base.py", line 573, in compute
+    results = schedule(dsk, keys, **kwargs)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/threaded.py", line 81, in get
+    results = get_async(
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/local.py", line 506, in get_async
+    raise_exception(exc, tb)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/local.py", line 314, in reraise
+    raise exc
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/local.py", line 219, in execute_task
+    result = _execute_task(task, data)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in _execute_task
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in <genexpr>
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in _execute_task
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in <genexpr>
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in _execute_task
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/optimization.py", line 969, in __call__
+    return core.get(self.dsk, self.outkey, dict(zip(self.inkeys, args)))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 149, in get
+    result = _execute_task(task, cache)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/core.py", line 119, in _execute_task
+    return func(*(_execute_task(a, cache) for a in args))
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/dask/array/core.py", line 119, in getter
+    c = np.asarray(c)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/numpy/core/_asarray.py", line 102, in asarray
+    return array(a, dtype, copy=False, order=order)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/indexing.py", line 358, in __array__
+    return np.asarray(self.array, dtype=dtype)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/numpy/core/_asarray.py", line 102, in asarray
+    return array(a, dtype, copy=False, order=order)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/indexing.py", line 522, in __array__
+    return np.asarray(self.array, dtype=dtype)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/numpy/core/_asarray.py", line 102, in asarray
+    return array(a, dtype, copy=False, order=order)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/indexing.py", line 423, in __array__
+    return np.asarray(array[self.key], dtype=None)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/numpy/core/_asarray.py", line 102, in asarray
+    return array(a, dtype, copy=False, order=order)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/coding/variables.py", line 70, in __array__
+    return self.func(self.array)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/coding/variables.py", line 137, in _apply_mask
+    data = np.asarray(data, dtype=dtype)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/numpy/core/_asarray.py", line 102, in asarray
+    return array(a, dtype, copy=False, order=order)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/indexing.py", line 423, in __array__
+    return np.asarray(array[self.key], dtype=None)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/backends/netCDF4_.py", line 93, in __getitem__
+    return indexing.explicit_indexing_adapter(
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/core/indexing.py", line 712, in explicit_indexing_adapter
+    result = raw_indexing_method(raw_key.tuple)
+  File "/home/users/hkhatri/miniconda3/lib/python3.9/site-packages/xarray/backends/netCDF4_.py", line 106, in _getitem
+    array = getitem(original_array, key)
+  File "src/netCDF4/_netCDF4.pyx", line 4406, in netCDF4._netCDF4.Variable.__getitem__
+  File "src/netCDF4/_netCDF4.pyx", line 5350, in netCDF4._netCDF4.Variable._get
+  File "src/netCDF4/_netCDF4.pyx", line 1927, in netCDF4._netCDF4._ensure_nc_success
+RuntimeError: NetCDF: HDF error
+srun: error: host290: task 0: Exited with exit code 1
