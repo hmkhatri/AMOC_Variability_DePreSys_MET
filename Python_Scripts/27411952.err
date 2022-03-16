@@ -1,0 +1,4 @@
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** JOB 27411952 ON host292 CANCELLED AT 2022-03-09T23:09:05 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 27411952.0 ON host292 CANCELLED AT 2022-03-09T23:09:05 DUE TO TIME LIMIT ***
+srun: error: host292: task 0: Terminated

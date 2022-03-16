@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --partition=test
+#SBATCH --ntasks=8 
+#SBATCH -o %j.out 
+#SBATCH -e %j.err
+#SBATCH --time=1:00:00
+
+source /home/users/hkhatri/miniconda3/bin/activate
+
+srun python 02_memory_usage_dask_mpi.py
+
+# mpirun python 02_memory_usage_dask_mpi.py

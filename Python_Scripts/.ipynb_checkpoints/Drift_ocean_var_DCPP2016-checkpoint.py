@@ -4,20 +4,21 @@ import scipy as sc
 import xarray as xr
 import gc
 import dask.distributed
+import os, psutil
 #from dask.distributed import Client
 
 #from mpi4py import MPI
-#import dask
+import dask
 #import distributed
 
-#from dask_mpi import initialize
-#initialize()
+from dask_mpi import initialize
+initialize()
 
 #import warnings
 #warnings.filterwarnings('ignore')
 
-#from dask.distributed import Client, performance_report
-#client = Client()
+from dask.distributed import Client, performance_report
+client = Client()
 
 ### ------ Function to sum over selected years ----------
 
@@ -46,7 +47,7 @@ def processDataset(ds1, y1, y2, lead_yr):
     ind_tim1 = 12*lead_yr
     ind_tim2 = np.minimum(12 + 12*lead_yr, len(ds1['time']))
     
-    ds2 = ds1.sel(start_year = slice(y1-lead_yr, y2-lead_yr-1))
+    ds2 = ds1.isel(start_year = slice(y1-lead_yr-y1+10, y2-lead_yr-y1+10))
     ds2 = ds2.isel(time=slice(ind_tim1, ind_tim2))
     # isel -> slice(0,10) will isolate data for 0, 1,2, ...9 indices
     # sel -> slice(1960, 1970) will isolate data for 1960, 1961, .... 1970 years
@@ -72,7 +73,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/" # this is for 3D vars
 
 #var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['vo', 'uo'] #['thetao']
+var_list = ['thetao'] #['thetao', 'vo', 'uo']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -80,7 +81,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(0,10):
+    for r in range(5,3,-1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -96,7 +97,7 @@ for var in var_list:
             #                      decode_times=False, engine='netcdf4')
             # netdcf4 engine seems to be faster than h5netcdf in reading files
             
-            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, chunks={'lev':1},
+            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, chunks={'lev':1, 'time':1},
                                    decode_times=False, engine='netcdf4') as d:
                 d = d
             
@@ -115,7 +116,8 @@ for var in var_list:
         #ds = ds.isel(i=slice(749,849), j = slice(699, 799)) # just for a check
         #ds = ds.isel(lev=0)
         
-        ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
+        #ds = ds.assign(start_year = np.arange(year1-10, year2, 1))
+        # ignore assign -> seems to break the mpi code
         
         #if(var=='thetao'):
         #ds = ds.chunk({'start_year':1, 'lev':10})
@@ -143,7 +145,9 @@ for var in var_list:
             #ds_save = ds_var.compute()
             
             ds_save = xr.Dataset()
-            ds_save[var] = ds_var.compute()
+            
+            with performance_report(filename="memory-mpi.html"):
+                ds_save[var] = ds_var.compute() #persist()
     
             save_file = (save_path +"Drift_" + var + "_r" + str(r+1)+ 
                          "_Lead_Year_" + str(int(lead_year+1)) + ".nc")
@@ -152,12 +156,18 @@ for var in var_list:
             print("File saved for Lear Year = ", lead_year+1)
             
             #del ds_save, ds_var
-            
-            #ds_save.close()
             #ds_var.close()
             
-            #gc.collect()
+            process = psutil.Process(os.getpid())
+            print("Memory usage in GB = ", process.memory_info().rss/1e9)
             
-        #ds.close()
+            client.cancel([ds_var, ds_save])
+            
+            ds_save.close()
+            
+            gc.collect()
+            
+        ds.close()
+        del ds
 
-#client.close()
+client.close()

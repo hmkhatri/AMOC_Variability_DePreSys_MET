@@ -3,6 +3,9 @@
 # Potential densities are computed using monthly T and S at wrt p = 1 bar. 
 # xgcm transform funtionality is used for computing transform at specific density levels
 # Moreoever, depths of these density isolines are also computed.
+#
+# very slow with dask-mpi. Effectively no speed up from serial code.
+# probably because chunks need to separated in (x, y, time) and there is a lot of inter-worker communication.
 ## --------------------------------------------------------------------
 
 # ------- load libraries ------------ 
@@ -18,6 +21,7 @@ import gc
 import warnings
 warnings.filterwarnings('ignore')
 
+import dask
 #from dask_mpi import initialize
 #initialize()
 
@@ -36,6 +40,7 @@ def pdens(S,theta):
 def select_subset(d1):
     
     d1 = d1.isel(i=slice(749,1199), j = slice(699, 1149))
+    d1 = d1.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
     
     return d1
 
@@ -60,7 +65,7 @@ f = np.arange(29.0, 31.1, 1.)
 # compute transport and depth at sigma levels
 target_sigma_levels = np.concatenate((a ,b, c, d, e, f))
 
-for r in range(4,10):
+for r in range(2,3):
     
     for year in range(year1, year2, 1):
         
@@ -72,9 +77,9 @@ for r in range(4,10):
 
             var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
 
-            #d = xr.open_mfdataset(var_path, parallel=True)
+            #d = xr.open_mfdataset(var_path, parallel=True) #chunks={'time':1, 'j':90}, 
             with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
-                                   chunks={'time':1}, engine='netcdf4') as d:
+                                   engine='netcdf4') as d:
                 d = d
 
             #d = d.isel(i=slice(749,1199), j = slice(699, 1149)) # try with smaller set
@@ -102,14 +107,14 @@ for r in range(4,10):
         print("Data read complete")
             
         # put a loop for months
-        for mon in range(0,5): #125):
+        for mon in range(97,125): #(0,5)
             
             # extract individual time steps
-            #ds1 = ds.isel(time = mon)
-            ds1 = ds.isel(time = slice(mon*25, mon*25+25))
+            ds1 = ds.isel(time = mon)
+            #ds1 = ds.isel(time = slice(mon*25, mon*25+25))
             
             # create outer depth levels
-            level_outer_data = (cf_xarray.bounds_to_vertices(ds1.lev_bnds.isel(time=0),'bnds').load().data)
+            level_outer_data = (cf_xarray.bounds_to_vertices(ds.lev_bnds.isel(time=0),'bnds').load().data)
             ds1 = ds1.assign_coords({'level_outer': level_outer_data})
             
             # create grid using xgcm
@@ -143,8 +148,8 @@ for r in range(4,10):
             ds_save['depth_sigma'] =(depth_sigma.rename({'sigma0':
                                                         'sigma0_bnds'})).astype(np.float32)
 
-            #ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
-            ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
+            ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
+            #ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
 
             ds_save = ds_save.persist() #client.persist(ds_save).results()
 
