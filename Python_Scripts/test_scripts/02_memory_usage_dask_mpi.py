@@ -44,9 +44,9 @@ ds1 = xr.concat(ds1, dim='r')
 
 print("Data read complete")
 
-#with performance_report(filename="memory-mpi.html"):
-#    tmp = ds['data'].mean('r')
-#    ds1_mean = tmp.compute()
+with performance_report(filename="memory-mpi.html"):
+    tmp = ds['data'].mean('r')
+    ds1_mean = tmp.compute()
     
 #with performance_report(filename="memory-mpi1.html"):
 #    tmp = ds['data'].mean('t')
@@ -58,18 +58,18 @@ print("Data read complete")
 
 print("Data computations complete")
 
-with performance_report(filename="memory-mpi-loop.html"):
-    
-    for r in range(0,len(ds['r'])):
-        tmp = ds['data'].isel(r=r).mean('t')
-        ds1_mean = tmp.compute()
-        
-        print("Data computations complete for r = ", r+1)
-    
-        process = psutil.Process(os.getpid())
-        print("Memory usage in MB = ", process.memory_info().rss /1e6)
-    
-        client.cancel(ds1_mean)
+#with performance_report(filename="memory-mpi-loop.html"):
+#    
+#    for r in range(0,len(ds['r'])):
+#        tmp = ds['data'].isel(r=r).mean('t')
+#        ds1_mean = tmp.compute()
+#        
+#        print("Data computations complete for r = ", r+1)
+#    
+#        process = psutil.Process(os.getpid())
+#        print("Memory usage in MB = ", process.memory_info().rss /1e6)
+#    
+#        client.cancel(ds1_mean)
 
 
 

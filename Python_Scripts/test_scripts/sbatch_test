@@ -7,6 +7,4 @@
 
 source /home/users/hkhatri/miniconda3/bin/activate
 
-# srun python 02_memory_usage_dask_mpi.py
-
 mpirun python 02_memory_usage_dask_mpi.py

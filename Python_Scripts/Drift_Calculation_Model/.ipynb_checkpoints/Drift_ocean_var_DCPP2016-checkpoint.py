@@ -81,7 +81,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/" # this is for 3D vars
 
 #var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['vo'] #['thetao', 'vo', 'uo']
+var_list = ['uo'] #['thetao', 'vo', 'uo']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -89,7 +89,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(2,10,1):
+    for r in range(7,10,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -138,7 +138,7 @@ for var in var_list:
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range(2,11): #(0,11):
+        for lead_year in range(0,11): #(0,11):
     
             #print("Lead Year running = ", lead_year)
 

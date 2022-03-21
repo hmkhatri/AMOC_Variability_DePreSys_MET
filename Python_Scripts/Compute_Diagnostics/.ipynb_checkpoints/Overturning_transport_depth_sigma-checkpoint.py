@@ -72,7 +72,7 @@ f = np.arange(29.0, 31.1, 1.)
 # compute transport and depth at sigma levels
 target_sigma_levels = np.concatenate((a ,b, c, d, e, f))
 
-for r in range(1,10):
+for r in range(3,10):
     
     for year in range(year1, year2, 1):
         
@@ -87,8 +87,8 @@ for r in range(1,10):
 
             #d = xr.open_mfdataset(var_path, parallel=True) #chunks={'time':1, 'j':90}, 
             with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
-                                   chunks={'time':1, 'j':225, 'i':225}, engine='netcdf4') as d:
-                d = d
+                                   chunks={'time':1, 'j':45}, engine='netcdf4') as d:
+                d = d # don't change chunks as it takes only 1 min for computations 
 
             #d = d.isel(i=slice(749,1199), j = slice(699, 1149)) # try with smaller set
             #d = d.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds', 'i', 'j'])
@@ -159,7 +159,7 @@ for r in range(1,10):
             #ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
             ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
 
-            ds_save = ds_save.persist() #client.persist(ds_save).results()
+            ds_save = ds_save.compute() #client.persist(ds_save).results()
 
             save_file = (save_path + "Transport_sigma_"+ str(year) + "_r" + str(r+1) 
                          + "_time_" + str(mon) + ".nc")

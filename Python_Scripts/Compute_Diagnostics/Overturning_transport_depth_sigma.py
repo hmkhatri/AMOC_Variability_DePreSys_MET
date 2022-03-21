@@ -17,16 +17,17 @@ import cf_xarray
 import gsw as gsw
 from xgcm import Grid
 import gc
+from tornado import gen
 
 import warnings
 warnings.filterwarnings('ignore')
 
 import dask
-#from dask_mpi import initialize
-#initialize()
+from dask_mpi import initialize
+initialize()
 
-#from dask.distributed import Client, performance_report
-#client = Client()
+from dask.distributed import Client, performance_report
+client = Client()
 #print(client)
 
 ### ------ Function to compute potential density and transform to density layers ----------
@@ -44,6 +45,12 @@ def select_subset(d1):
     
     return d1
 
+async def stop(dask_scheduler):
+    await gen.sleep(0.1)
+    await dask_scheduler.close()
+    loop = dask_scheduler.loop
+    loop.add_callback(loop.stop)
+
 ### ------------- Main computations ------------
 
 ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
@@ -51,7 +58,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 # for monthly drift
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
 
-year1, year2 = (1960, 1961)
+year1, year2 = (1962, 1963)
 var_list = ['thetao', 'so', 'vo']
 
 # define sigma levels for transform
@@ -65,7 +72,7 @@ f = np.arange(29.0, 31.1, 1.)
 # compute transport and depth at sigma levels
 target_sigma_levels = np.concatenate((a ,b, c, d, e, f))
 
-for r in range(2,3):
+for r in range(3,10):
     
     for year in range(year1, year2, 1):
         
@@ -75,12 +82,13 @@ for r in range(2,3):
 
         for var in var_list:
 
-            var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
+            var_path = (ppdir + "s" + str(year) +"-r" + str(r+1) + 
+                        "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
 
             #d = xr.open_mfdataset(var_path, parallel=True) #chunks={'time':1, 'j':90}, 
             with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
-                                   engine='netcdf4') as d:
-                d = d
+                                   chunks={'time':1, 'j':45}, engine='netcdf4') as d:
+                d = d # don't change chunks as it takes only 1 min for computations 
 
             #d = d.isel(i=slice(749,1199), j = slice(699, 1149)) # try with smaller set
             #d = d.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds', 'i', 'j'])
@@ -107,7 +115,7 @@ for r in range(2,3):
         print("Data read complete")
             
         # put a loop for months
-        for mon in range(97,125): #(0,5)
+        for mon in range(0,5):
             
             # extract individual time steps
             #ds1 = ds.isel(time = mon)
@@ -151,7 +159,7 @@ for r in range(2,3):
             #ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
             ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
 
-            ds_save = ds_save.persist() #client.persist(ds_save).results()
+            ds_save = ds_save.compute() #client.persist(ds_save).results()
 
             save_file = (save_path + "Transport_sigma_"+ str(year) + "_r" + str(r+1) 
                          + "_time_" + str(mon) + ".nc")
@@ -175,6 +183,8 @@ for r in range(2,3):
         #client.cancel(ds)
         
 #client.close()
+print('Closing cluster')
+client.run_on_scheduler(stop, wait=False)
         
         
         
