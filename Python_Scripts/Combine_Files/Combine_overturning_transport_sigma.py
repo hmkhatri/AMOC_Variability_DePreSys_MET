@@ -36,10 +36,10 @@ async def stop(dask_scheduler):
 ppdir="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/"
 
-ds_mask = xr.open_dataset("../../../../DePreSys4_Data/Data_Consolidated/Mask_V_grid.nc")
+ds_mask = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Mask_V_grid.nc")
 ds_mask = ds_mask.rename({'j':'j_c'})
 
-ds_grid = xr.open_dataset("../../../../DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
+ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
 
 path = "/home/users/hkhatri/DePreSys4_Data/Test_Data/ONM_Monthly/"
 ds_T = xr.open_dataset(path + "nemo_av830o_1m_19810301-19810401_grid-T.nc")

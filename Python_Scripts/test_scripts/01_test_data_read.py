@@ -34,6 +34,7 @@ for var in var_list:
 
             var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/files/d20200417/"
             
+            # if condition is only to check if decode_times = False makes any difference
             if(year % 2 == 0): 
                 d1 = xr.open_mfdataset(ppdir + var_path + "*.nc")
                 

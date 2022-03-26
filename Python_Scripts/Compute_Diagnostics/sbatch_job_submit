@@ -1,0 +1,34 @@
+#!/bin/bash
+# SBATCH --partition=par-multi 
+# SBATCH --partition=par-single
+# SBATCH --partition=test
+# SBATCH --ntasks=16
+#SBATCH --partition=high-mem
+#SBATCH --mem=64GB
+# SBATCH --partition=short-serial
+# SBATCH --partition=short-serial-4hr
+# SBATCH --account=short4hr 
+#SBATCH -o %j.out 
+#SBATCH -e %j.err
+#SBATCH --time=24:00:00
+
+# load python3 module
+# module add jaspy/3.7/r20181219
+
+source /home/users/hkhatri/miniconda3/bin/activate
+# module load eb/OpenMPI/gcc/4.0.0
+
+# Execute python script
+
+srun python Overturning_transport_depth_sigma.py
+
+# mpirun python Composite_3D_NAO_phase.py
+
+# srun python Anomaly_SLP_NAO_compute.py
+
+#mpirun -n 8 python Composite_Diagnostics_NAO_phases.py
+
+# srun python Correlation_NAO_ocean_var.py
+
+
+# module purge 

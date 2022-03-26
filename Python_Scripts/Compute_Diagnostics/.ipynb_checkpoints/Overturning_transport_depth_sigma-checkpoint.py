@@ -4,8 +4,8 @@
 # xgcm transform funtionality is used for computing transform at specific density levels
 # Moreoever, depths of these density isolines are also computed.
 #
-# very slow with dask-mpi. Effectively no speed up from serial code.
-# probably because chunks need to separated in (x, y, time) and there is a lot of inter-worker communication.
+# With dask-mpi, chuncking is very important
+# always use chunks={'time':1, 'j':45}; otherwise, the code can become 100 times slower.
 ## --------------------------------------------------------------------
 
 # ------- load libraries ------------ 
@@ -23,11 +23,11 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import dask
-from dask_mpi import initialize
-initialize()
+#from dask_mpi import initialize
+#initialize()
 
-from dask.distributed import Client, performance_report
-client = Client()
+#from dask.distributed import Client, performance_report
+#client = Client()
 #print(client)
 
 ### ------ Function to compute potential density and transform to density layers ----------
@@ -58,7 +58,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 # for monthly drift
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
 
-year1, year2 = (1962, 1963)
+year1, year2 = (1978, 1980)
 var_list = ['thetao', 'so', 'vo']
 
 # define sigma levels for transform
@@ -72,7 +72,7 @@ f = np.arange(29.0, 31.1, 1.)
 # compute transport and depth at sigma levels
 target_sigma_levels = np.concatenate((a ,b, c, d, e, f))
 
-for r in range(3,10):
+for r in range(0,1):
     
     for year in range(year1, year2, 1):
         
@@ -176,15 +176,17 @@ for r in range(3,10):
             
             #client.cancel([depth_sigma, depth, v_transport_sigma, v_transport])
             #client.cancel([ds1, ds_save])
-            #client.run(gc.collect) # this doesn't help
+            gc.collect()
             
         ds.close()
-            
-        #client.cancel(ds)
+        gc.collect()
+        client.run(gc.collect)
+        
+        client.restart()
         
 #client.close()
 print('Closing cluster')
-client.run_on_scheduler(stop, wait=False)
+#client.run_on_scheduler(stop, wait=False)
         
         
         

@@ -13,11 +13,11 @@ import dask
 from tornado import gen
 #import distributed
 
-from dask_mpi import initialize
-initialize()
-
 import warnings
 warnings.filterwarnings('ignore')
+
+from dask_mpi import initialize
+initialize()
 
 from dask.distributed import Client, performance_report
 client = Client()
@@ -81,7 +81,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/" # this is for 3D vars
 
 #var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['uo'] #['thetao', 'vo', 'uo']
+var_list = ['vo'] #['thetao', 'vo', 'uo']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -89,7 +89,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(7,10,1):
+    for r in range(6,7,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -133,12 +133,12 @@ for var in var_list:
         #if(var=='thetao'):
         #ds = ds.chunk({'start_year':1, 'lev':10})
         #else:
-        #ds = ds.chunk({'start_year':1, 'time':1, 'j':50})
+        ds = ds.chunk({'start_year':-1})
         
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range(0,11): #(0,11):
+        for lead_year in range(8,11): #(0,11):
     
             #print("Lead Year running = ", lead_year)
 
@@ -171,8 +171,8 @@ for var in var_list:
             ds_save.close()
             ds_var.close()
             
-            process = psutil.Process(os.getpid())
-            print("Memory usage in GB = ", process.memory_info().rss/1e9)
+            #process = psutil.Process(os.getpid())
+            #print("Memory usage in GB = ", process.memory_info().rss/1e9)
             
             gc.collect()
         
@@ -180,9 +180,13 @@ for var in var_list:
         ds.close()
         del ds
         gc.collect()
+        client.run(gc.collect)
         
         print("Completed r = ", r+1)
+        
+        client.restart()
 
 print('Closing cluster')
 client.run_on_scheduler(stop, wait=False)
+
 #client.run_on_scheduler(sys.exit, 0)
