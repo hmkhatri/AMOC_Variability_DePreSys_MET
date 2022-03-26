@@ -4,18 +4,20 @@ import scipy as sc
 import xarray as xr
 import gc
 import dask.distributed
-import os, psutil
+import os, psutil, sys
+from tornado import gen
 #from dask.distributed import Client
 
 #from mpi4py import MPI
 import dask
+from tornado import gen
 #import distributed
-
-from dask_mpi import initialize
-initialize()
 
 import warnings
 warnings.filterwarnings('ignore')
+
+from dask_mpi import initialize
+initialize()
 
 from dask.distributed import Client, performance_report
 client = Client()
@@ -61,6 +63,12 @@ def select_subset(d1):
     
     return d1
 
+async def stop(dask_scheduler):
+    await gen.sleep(0.1)
+    await dask_scheduler.close()
+    loop = dask_scheduler.loop
+    loop.add_callback(loop.stop)
+
 ### ------------- Main computations ------------
 
 ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
@@ -73,7 +81,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/" # this is for 3D vars
 
 #var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['thetao'] #['thetao', 'vo', 'uo']
+var_list = ['vo'] #['thetao', 'vo', 'uo']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -81,7 +89,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(4,5,1):
+    for r in range(6,7,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -101,6 +109,7 @@ for var in var_list:
             with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
                                    chunks={'lev':1, 'time':1},
                                    decode_times=False, engine='netcdf4') as d:
+
                 d = d
             
             # drop time coordinate as different time values create an issue in concat operation
@@ -124,12 +133,12 @@ for var in var_list:
         #if(var=='thetao'):
         #ds = ds.chunk({'start_year':1, 'lev':10})
         #else:
-        #ds = ds.chunk({'start_year':1, 'time':1, 'j':50})
+        ds = ds.chunk({'start_year':-1})
         
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range(0,11):
+        for lead_year in range(0,11): #(0,11):
     
             #print("Lead Year running = ", lead_year)
 
@@ -148,8 +157,9 @@ for var in var_list:
             
             ds_save = xr.Dataset()
             
-            with performance_report(filename="memory-mpi.html"):
-                ds_save[var] = ds_var.compute() #persist()
+            #with performance_report(filename="memory-mpi.html"):
+            #with dask.config.set(scheduler='processes'): # this does not work with dask-mpi
+            ds_save[var] = ds_var.compute() #persist()
     
             save_file = (save_path +"Drift_" + var + "_r" + str(r+1)+ 
                          "_Lead_Year_" + str(int(lead_year+1)) + ".nc")
@@ -157,19 +167,26 @@ for var in var_list:
 
             print("File saved for Lear Year = ", lead_year+1)
             
-            client.cancel([ds_var, ds_save])
+            #client.cancel([ds_var, ds_save])
             ds_save.close()
             ds_var.close()
             
-            process = psutil.Process(os.getpid())
-            print("Memory usage in GB = ", process.memory_info().rss/1e9)
+            #process = psutil.Process(os.getpid())
+            #print("Memory usage in GB = ", process.memory_info().rss/1e9)
             
-            #gc.collect()
+            gc.collect()
         
-        client.cancel([ds])
+        #client.cancel([ds])
         ds.close()
         del ds
+        gc.collect()
+        client.run(gc.collect)
         
         print("Completed r = ", r+1)
         
-client.close()
+        client.restart()
+
+print('Closing cluster')
+client.run_on_scheduler(stop, wait=False)
+
+#client.run_on_scheduler(sys.exit, 0)

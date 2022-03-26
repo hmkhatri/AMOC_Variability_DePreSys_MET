@@ -1,26 +1,42 @@
 ## --------------------------------------------------------------------
 # This script for saving anomaly data for high and low NAO phase periods. 
-# There are two options
-# Option one - Save data for all members for the specfic season with extreme NAO indices 
-# Option two - Save data time-series for members having exterme NAO indices (averaged for all members)
+# This is specifically for 3D vars.
+
+# check Drift_thetao_r2_Lead_Year_1.nc -> probably corrupted
 ## --------------------------------------------------------------------
 
 # load libraries
 import numpy as np
-import scipy as sc
 import xarray as xr
-from dask.distributed import Client, LocalCluster
-from dask import delayed
-from dask import compute
-from dask.diagnostics import ProgressBar
+import gc
+import dask.distributed
+import os, psutil, sys
+from tornado import gen
+import dask
+from tornado import gen
+
+from dask_mpi import initialize
+initialize()
 
 import warnings
 warnings.filterwarnings('ignore')
 
-#from dask_mpi import initialize
+from dask.distributed import Client, performance_report
+client = Client()
 
-#initialize()
-#client = Client()
+# -------- functions define -----------
+def select_subset(d1):
+    
+    d1 = d1.isel(i=slice(749,1199), j = slice(699, 1149))
+    d1 = d1.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds'])
+    
+    return d1
+
+async def stop(dask_scheduler):
+    await gen.sleep(0.1)
+    await dask_scheduler.close()
+    loop = dask_scheduler.loop
+    loop.add_callback(loop.stop)
 
 # -------- Define paths and read data --------------
 
@@ -28,14 +44,13 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 
 ppdir_NAO="/home/users/hkhatri/DePreSys4_Data/Data_Anomaly_Compute/NAO/"
 
-ppdir_drift="/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
+ppdir_drift="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/"
     
-save_path="/home/users/hkhatri/DePreSys4_Data/Data_Composite/time_series/"
+save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO/"
 
 year1, year2 = (1960, 2017)
 
 var_list = ['thetao'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-#var_list = ['pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly.nc")
@@ -66,6 +81,8 @@ else:
     
 # ----------- Read data and save relevant values ----------- 
 
+r_range = [0, 2, 3, 5, 6, 7, 8, 9] 
+
 for var in var_list:
     
     print("Running var = ", var)
@@ -73,13 +90,14 @@ for var in var_list:
     # Read drift data
     ds_drift = []
 
-    for r in range (0,10):
+    for r in r_range: #range (0,10):
 
         ds1 = []
         for lead_year in range(0,11):
 
             d = xr.open_dataset(ppdir_drift + var + "/Drift_"+ var + "_r" + 
-                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc")
+                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc",
+                                chunks={'lev':1, 'time':1})
             d = d.assign(time = np.arange(lead_year*12, 12*lead_year + 
                                           np.minimum(12, len(d['time'])), 1))
             ds1.append(d)
@@ -88,6 +106,7 @@ for var in var_list:
         ds_drift.append(ds1)
 
     ds_drift = xr.concat(ds_drift, dim='r')
+    ds_drift = ds_drift.assign(r = r_range)
     ds_drift = ds_drift.drop('time')
     #ds_drift = ds_drift.chunk({'time':12, 'j':50, 'i':50})
 
@@ -95,41 +114,52 @@ for var in var_list:
     
     # Read full data to compute anomaly
     ds = []
+    ds_d = []
     
-    for r in range(0,10):
+    for r in r_range: #range(0,10):
         
         for year in range(year1, year2, 1):
             
             if(count_NAO.isel(r=r).sel(start_year=year) == 1):
                 
-                #var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/"
-                var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/"
+                var_path = (ppdir + "s" + str(year) +"-r" + str(r+1) + 
+                            "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
                 
-                d = xr.open_mfdataset(ppdir + var_path + "*.nc")
-                #d = d.chunk({'time':12, 'j':50, 'i':50})
-                d = d[var].drop('time') - ds_drift[var].isel(r=r)
+                with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
+                                       chunks={'lev':1, 'time':1},
+                                       decode_times=False, engine='netcdf4') as d:
+                    d = d
+
+                # compute anomaly
+                d = d[var].drop('time') #- ds_drift[var].sel(r=r)
+                
+                d1 = ds_drift[var].sel(r=r)
                 
                 ds.append(d)
+                ds_d.append(d1)
                 
     ds = xr.concat(ds, dim='comp')
     ds = ds.assign_coords(time=tim)
     
+    ds_d = xr.concat(ds_d, dim='comp')
+    
     print("Composite Data read complete")
     
-    # Option one
-    #ds_season = ds.isel(time=slice(1,len(ds.time)-1))
-    #ds_season = ds_season.resample(time='QS-DEC').mean('time')
-    #ds_season = ds_season.isel(time=tim_ind)
-    #ds_season = ds_season.compute()
+    for lev in range(0,5):
+        
+        # compute anomaly for selected levels
+        ds1 = (ds.isel(lev = slice(lev*15, lev*15 + 15)) -
+               ds_d.isel(lev = slice(lev*15, lev*15 + 15)))
     
-    # Option two
-    with ProgressBar():
-        ds_season = ds.mean('comp').compute()
+        ds_season = ds1.mean('comp').compute()
     
-    comp_save = xr.Dataset()
-    comp_save[var] = ds_season
-    save_file = save_path + "Composite_" + case + "_" + var + '_tim_ind_' + str(tim_ind) + ".nc"
-    comp_save.to_netcdf(save_file)
+        comp_save = xr.Dataset()
+        comp_save[var] = ds_season.astype(np.float32)
+        save_file = (save_path + "Composite_" + case + "_" + var + '_tim_ind_' 
+                     + str(tim_ind) + "_lev_" + str(lev) + ".nc")
+        comp_save.to_netcdf(save_file)
     
-    print("Data saved successfully")
-
+        print("Data saved successfully for levels:", lev*15, " - ",  lev*15 + 15)
+    
+print('Closing cluster')
+client.run_on_scheduler(stop, wait=False)
