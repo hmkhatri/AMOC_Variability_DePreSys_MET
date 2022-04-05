@@ -1,18 +1,31 @@
-## --------------------------------------------------------------------
-# This scripts compute meridional transport at fixed sigma levels 
-# Potential densities are computed using monthly T and S at wrt p = 1 bar. 
-# xgcm transform funtionality is used for computing transform at specific density levels
-# Moreoever, depths of these density isolines are also computed.
-#
-# With dask-mpi, chuncking is very important
-# always use chunks={'time':1, 'j':45}; otherwise, the code can become 100 times slower.
-## --------------------------------------------------------------------
+"""
+Author: Hemant Khatri
+Email: hkhatri@liverpool.ac.uk
+
+This script computes zonal and meridional transport at fixed density levels from velocity data at depth-levels. 
+1. Potential densities are computed using monthly Temparature and Salinity. 
+2. xgcm transform funtionality is used for computing transport at fixed density levels
+3. Depths of these density isolines are also computed.
+4. Meridional overturning (in both z-space and density-space) is computed at fixed latitudes. 
+5. To save on storage space, the data is regridded to a coarse grid before saving 
+6. Finally, data is saved in netcdf format
+
+This script makes use of xarray, dask, xgcm libraries for computations and working with netcdf files. 
+The code can work in serial mode as well as in parallel (see below for details). 
+
+For parallelization, daks-mpi (http://mpi.dask.org/en/latest/) is used to initialize multiple workers on a dask client. This is to ensure that dask is aware of multiple cores assigned through slurm batch submission job. 
+With dask, chunksizes are very important. Generally, it is good to have chunksize of 10-100 MB. 
+For this script, it is recomended to use chunks={'time':1, 'j':45, 'lev':-1}, for which computations are found to be very efficient.
+
+Instead of dask-mpi, one could also use dask jobqueue (http://jobqueue.dask.org/en/latest/), which is very effective for interactive dask session on jupyter notebook or ipython console.
+
+To run in serial, use "python file.py"
+To run in parallel, use "mpirun -np NUM_Cores python file.py"
+"""
 
 # ------- load libraries ------------ 
 import numpy as np
-import scipy as sc
 import xarray as xr
-import dask.distributed
 import cf_xarray
 import gsw as gsw
 from xgcm import Grid
@@ -22,30 +35,204 @@ from tornado import gen
 import warnings
 warnings.filterwarnings('ignore')
 
-import dask
-#from dask_mpi import initialize
-#initialize()
+# -- commands in founr line are for using dask with "mpirun -np num_tasks python file.py" command ---- 
+# ------ comment these if running as a serial code -------
+from dask_mpi import initialize
+initialize()
 
-#from dask.distributed import Client, performance_report
-#client = Client()
-#print(client)
+from dask.distributed import Client, performance_report
+client = Client()
+# ------------------------------------------------------------------------------
 
-### ------ Function to compute potential density and transform to density layers ----------
+### ------ Functions for computations ----------
 
-def pdens(S,theta):
-
-    pot_dens = gsw.density.sigma0(S, theta)
-
-    return pot_dens
-
-def select_subset(d1):
+def select_subset(dataset):
     
-    d1 = d1.isel(i=slice(749,1199), j = slice(699, 1149))
-    d1 = d1.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds'])
+    """Select subset of dataset in xr.open_mfdataset command
+    """
+    dataset = dataset.isel(i=slice(749,1199), j = slice(699, 1149)) # indices range
+    dataset = dataset.drop(['vertices_latitude', 'vertices_longitude', 
+                            'time_bnds']) # drop variables 
     
-    return d1
+    return dataset
+
+def compute_density(data_salinity, data_temperature):
+
+    """Compute potential density using salinity and potential temperature data 
+    Parameters
+    ----------
+    data_salinity : xarray DataArray for salinity data
+    data_temperature : xarray DataArray for potential temperature data
+    
+    Returns
+    -------
+    pot_density : xarray DataArray for potential density data
+    """
+
+    pot_density = gsw.density.sigma0(data_salinity, data_salinity)
+
+    return pot_density
+
+def density_levels(density_min=0., density_max=35.):
+    
+    """Define density levels
+    Parameters
+    ----------
+    density_min : float value for minimum density
+    density_max : float value for maximum density
+    
+    Returns
+    -------
+    sigma_levels : numpy array for density levels
+    """
+
+    density_rang1 = np.arange(density_min, 20., 2.0)
+    density_rang2 = np.arange(20., 23.1, 1.)
+    density_rang3 = np.arange(23.2, 26., 0.2)
+    density_rang4 = np.arange(26.1, 28., 0.1)
+    density_rang5 = np.arange(28.0, 28.8, 0.2)
+    density_rang6 = np.arange(29.0, density_max, 1.)
+    
+    sigma_levels = np.concatenate((density_rang1 ,density_rang2, density_rang3, density_rang4, 
+                                   density_rang5, density_rang6))
+    
+    return sigma_levels
+
+def transport_z(ds_vel, z_lev, grid, assign_name='transport'): 
+    
+    """Compute volume transport per unit horizontal length 
+    Parameters
+    ----------
+    ds_vel : xarray DataArray - velocity data
+    z_lev : xarray DataArray - outer z levels
+    grid : xgcm Grid object
+    assign_name : name for the volume transport
+    
+    Returns
+    -------
+    transport : xarray DataArray for volume transport
+    """
+    
+    thickness = grid.diff(z_lev, 'Z') # compute vertical grid spacing
+    transport =  ds_vel * thickness # velocity x vertical grid spacing
+    transport = transport.fillna(0.).rename(assign_name)
+    
+    return transport
+    
+def transport_sigma(pot_density, transport, density_levels, grid, dim=None, method='linear'):
+    
+    """Compute volume transport in density layers using xgcm.transform method 
+    Parameters
+    ----------
+    pot_density : xarray DataArray - potential density
+    transport : xarray DataArray - volume transport on z-levels
+    density_levels : numpy array - Target density levels at which one wants to compute volume transport 
+    grid : xgcm Grid object
+    dim : dimension for interpolation to have ensure pot_density and transport on the same grid
+    method : transform method out of 'linear' or 'conservative'
+    
+    Returns
+    -------
+    transport_sigma : xarray DataArray - volume transport at denisty levels
+    """
+    
+    if(dim != None): # interpolate the density to transport data grid
+        sigma_interp = grid.interp(pot_density, [dim], boundary='extend')
+    else:
+        sigma_interp = pot_density
+
+    sigma_interp = sigma_interp.rename('sigma0')
+    transport_sigma = grid.transform(transport, 'Z', density_levels,
+                                     target_data=sigma_interp, method=method)
+    transport_sigma.sigma0.attrs['units'] = "kg/m^3"
+    transport_sigma.sigma0.attrs['long_name'] = "Potential density with reference to ocean surface - 1000."
+    
+    return transport_sigma
+
+def save_data(data_var, save_location, short_name, long_name=None, var_units=None):
+    """Save final diagnostics in netcdf format
+    Parameters
+    ----------
+    data_var : xarray DataArray
+    save_location : string - location for saving data including filename
+    short_name : string - name for the variable
+    long_name : string - long name for the variable
+    var_units : string - dimensional units
+    """
+    
+    data_save = data_var.astype(np.float32).to_dataset(name=short_name)
+    data_save[short_name].attrs['units'] = var_units
+    data_save[short_name].attrs['long_name'] = long_name
+    
+    data_save = data_save.compute() # compute before saving
+    data_save.to_netcdf(save_location)
+    
+    print("Data saved succefully - ", short_name)
+    
+    data_save.close()
+
+def get_latitude_masks(lat_val, yc, grid): # adopted from ecco_v4_py
+    
+    """Compute maskW/S which grabs vector field grid cells along specified latitude band 
+    Parameters
+    ----------
+    lat_val : float - latitude at which to compute mask
+    yc : xarray DataArray - Contains latitude values at cell centers
+    grid : xgcm Grid object
+    Returns
+    -------
+    maskWedge, maskSedge : xarray DataArray
+        contains masks of latitude band at grid cell west and south grid edges
+    """
+    # Compute difference in X, Y direction.
+    # multiply by 1 so that "True" -> 1, 2nd arg to "where" puts False -> 0
+    ones = xr.ones_like(yc)
+    maskC = ones.where(yc >= lat_val, 0)
+
+    maskWedge = grid.diff(maskC, ['X'], boundary='fill')
+    maskSedge = grid.diff(maskC, ['Y'], boundary='fill')
+
+    return maskWedge, maskSedge
+
+def meridional_overturning(ds_var, transport_u, transport_v, latitude, lat_vals, 
+                           dx, dy, grid, mask_u, mask_v, dim='z'):
+    
+    """Compute meridional overturning at specified latitudes
+    Parameters
+    ----------
+    ds_var : xarray Dataarray - To save overturning data
+    transport_u : xarray DataArray - Zonal transport
+    transport_v : xarray DataArray - Meridional transport
+    latitude : xarray DataArray - latitude values at cell centers 
+    lat_vals : Numpy array for range of lattiudes
+    grid : xgcm Grid object
+    dx : xarray DataArray - Zonal grid spacing at meridional velocity grid
+    dy : xarray DataArray - Meridional grid spacing at zonal velocity grid
+    mask_u : xarray Dataset - u mask for the Region of interest
+    mask_v : xarray Dataset - v mask for the Region of interest
+    dim : vertical dimension name
+    Returns
+    -------
+    ds_var : xarray DataArray - meridional overturning at lat_vals
+    """
+    
+    for lat in lat_vals:
+
+        lat_maskW, lat_maskS = get_latitude_masks(lat, latitude, grid)
+        
+
+        lat_trsp_x = ((transport_u * lat_maskW * dy).where((mask_u == 0.))).sum(dim=['i_c','j'])
+        lat_trsp_y = ((transport_v * lat_maskS * dx).where((mask_v == 0.))).sum(dim=['i','j_c'])
+        
+        ds_var.loc[{'lat':lat}] = lat_trsp_x + lat_trsp_y
+        
+    ds_var = ds_var.cumsum(dim=dim)
+                    
+    return ds_var
 
 async def stop(dask_scheduler):
+    """To close all workers after job completion
+    """ 
     await gen.sleep(0.1)
     await dask_scheduler.close()
     loop = dask_scheduler.loop
@@ -53,140 +240,142 @@ async def stop(dask_scheduler):
 
 ### ------------- Main computations ------------
 
-ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
-
-# for monthly drift
+# first define paths for reading data and saving final diagnostics 
+data_dir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
 
-year1, year2 = (1978, 1980)
-var_list = ['thetao', 'so', 'vo']
+# read grid information and masking data
+ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
+ds_mask = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Mask_UV_grid.nc")
 
-# define sigma levels for transform
-a = np.arange(15., 20., 2.0)
-b = np.arange(20., 23.1, 1.)
-c = np.arange(23.2, 26., 0.2)
-d = np.arange(26.1, 28., 0.1)
-e = np.arange(28.0, 28.8, 0.2)
-f = np.arange(29.0, 31.1, 1.)
+year1, year2 = (2016, 2017) # range of years for reading data 
+var_list = ['thetao', 'so', 'vo', 'uo'] # list of variables to be read from model output
 
-# compute transport and depth at sigma levels
-target_sigma_levels = np.concatenate((a ,b, c, d, e, f))
+# get sigma levels
+sigma_min, sigma_max = (15., 31.1) 
+target_sigma_levels = density_levels(density_min=sigma_min, density_max=sigma_max)
 
+# Loop for going through multiple ensemble and hindcast members for computations
 for r in range(0,1):
     
     for year in range(year1, year2, 1):
         
-        print("Running: Ensemble = ", r+1, ", Year = ", year)
+        print("Running: Ensemble = ", r+1, ", Hindcast Year = ", year)
         
         ds = []
 
         for var in var_list:
 
-            var_path = (ppdir + "s" + str(year) +"-r" + str(r+1) + 
+            var_path = (data_dir + "s" + str(year) +"-r" + str(r+1) + 
                         "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
 
-            #d = xr.open_mfdataset(var_path, parallel=True) #chunks={'time':1, 'j':90}, 
             with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
                                    chunks={'time':1, 'j':45}, engine='netcdf4') as d:
-                d = d # don't change chunks as it takes only 1 min for computations 
-
-            #d = d.isel(i=slice(749,1199), j = slice(699, 1149)) # try with smaller set
-            #d = d.drop(['vertices_latitude', 'vertices_longitude', 'time_bnds', 'i', 'j'])
-
+                d = d 
+            # chunksize is decided such a way that 
+            # inter-worker communication is minimum and computations are efficient
+                
+            # renaming coords is required because variables are on different grid points (common in C-grid)
+            # later xgcm.grid function is used to fix locations of these vars on model grid
             if(var == 'vo'):
                 d = d.rename({'j':'j_c', 'longitude':'longitude_v', 'latitude':'latitude_v'})
+            elif(var == 'uo'):
+                d = d.rename({'i':'i_c', 'longitude':'longitude_u', 'latitude':'latitude_u'})
 
             ds.append(d)
 
-        ds = xr.merge(ds)
-
-        # create outer depth levels
-        #level_outer_data = (cf_xarray.bounds_to_vertices(ds.lev_bnds.isel(time=0),
-        #                                                 'bnds').load().data)
-        #level_outer_data = (cf_xarray.bounds_to_vertices(ds.lev_bnds,
-        #                                                'bnds').load().data)
-        #ds = ds.assign_coords({'level_outer': level_outer_data})
-
-        #ds = ds.drop('lev_bnds')
-
-        #ds = ds.chunk({'time':1})
-        #ds = ds.chunk({'time':1, 'i':225, 'j':225, 'j_c':225})
-
+        ds = xr.merge(ds) # merge to get a single dataset
+        #ds = xr.merge([ds, ds_grid['dx_v'].rename({'x':'i', 'yv':'j_c'}), 
+        #               ds_grid['dy_u'].rename({'xu':'i_c', 'y':'j'})]) 
+        
         print("Data read complete")
-            
-        # put a loop for months
-        for mon in range(0,5):
-            
-            # extract individual time steps
-            #ds1 = ds.isel(time = mon)
-            ds1 = ds.isel(time = slice(mon*25, mon*25+25))
-            
-            # create outer depth levels
-            level_outer_data = (cf_xarray.bounds_to_vertices(ds.lev_bnds.isel(time=0),'bnds').load().data)
-            ds1 = ds1.assign_coords({'level_outer': level_outer_data})
-            
-            # create grid using xgcm
-            grid = Grid(ds1, coords={'Z': {'center': 'lev', 'outer': 'level_outer'},
-                                     'Y': {'center': 'j', 'right': 'j_c'}}, periodic=[],)
-
-            # compute meridional transport
-            thickness = grid.diff(ds1.level_outer, 'Z')
-            v_transport =  ds1.vo * thickness
-            v_transport = v_transport.fillna(0.).rename('v_transport')
-
-            # compute potential density
-            sigma = xr.apply_ufunc(pdens, ds1.so, ds1.thetao, dask='parallelized',
-                                   output_dtypes=[ds1.thetao.dtype])
-
-            ds1['sigma0'] = grid.interp(sigma, ['Y'], boundary='extend')
-
-            v_transport_sigma = grid.transform(v_transport, 'Z', target_sigma_levels,
-                                               target_data=ds1.sigma0, method='conservative')
-
-            depth = xr.ones_like(v_transport) * v_transport['lev']
-
-            depth_sigma = grid.transform(depth, 'Z', target_sigma_levels,
-                                         target_data=ds1.sigma0, method='linear')
-
-            # save data
-
-            ds_save = xr.Dataset()
-
-            ds_save['v_transport_sigma'] = v_transport_sigma.astype(np.float32)
-            ds_save['depth_sigma'] =(depth_sigma.rename({'sigma0':
-                                                        'sigma0_bnds'})).astype(np.float32)
-
-            #ds_save = ds_save.transpose('sigma0','sigma0_bnds','j_c','i')
-            ds_save = ds_save.transpose('time', 'sigma0','sigma0_bnds','j_c','i')
-
-            ds_save = ds_save.compute() #client.persist(ds_save).results()
-
-            save_file = (save_path + "Transport_sigma_"+ str(year) + "_r" + str(r+1) 
-                         + "_time_" + str(mon) + ".nc")
-
-            ds_save.to_netcdf(save_file) #, compute = False)
-
-            # note - persist() does not seem to work, only metadata is saved
-
-            print("Computations completed and file saved succesfully")
-
-            del depth_sigma, depth, v_transport_sigma, v_transport
-            ds_save.close()
-            ds1.close()
-            
-            #client.cancel([depth_sigma, depth, v_transport_sigma, v_transport])
-            #client.cancel([ds1, ds_save])
-            gc.collect()
-            
+        
+        # ---------------------- Computations (points 1-3) ------------------------- #
+        # create outer depth levels (required for transforming to density levels)
+        level_outer_data = (cf_xarray.bounds_to_vertices(ds['lev_bnds'].isel(time=0),
+                                                         'bnds').load().data)
+        ds = ds.assign_coords({'level_outer': level_outer_data})
+        
+        # create grid object such that xgcm is aware of locations of velocity and tracer grid points
+        grid = Grid(ds, coords={'Z': {'center': 'lev', 'outer': 'level_outer'},
+                                'X': {'center': 'i', 'right': 'i_c'},
+                                'Y': {'center': 'j', 'right': 'j_c'}}, periodic=[],)
+        
+        # compute density (xr.apply_ufunc ensures that non-xarray operations are efficient with dask
+        sigma = xr.apply_ufunc(compute_density, ds['so'], ds['thetao'], dask='parallelized',
+                               output_dtypes=[ds['thetao'].dtype])
+        sigma = sigma.rename('sigma0')
+        
+        # compute zonal and meridional transport
+        Zonal_Transport = transport_z(ds['uo'], ds['level_outer'], grid, 
+                                      assign_name='Zonal_Transport')
+        Meridional_Transport = transport_z(ds['vo'], ds['level_outer'], grid, 
+                                           assign_name='Meridional_Transport')
+        
+        # compute zonal/meridional transport on sigma levels and depth of density isolines
+        Zonal_Transport_sigma = transport_sigma(sigma, Zonal_Transport, target_sigma_levels, 
+                                                grid=grid, dim='X', method='conservative')
+        
+        Meridional_Transport_sigma = transport_sigma(sigma, Meridional_Transport, target_sigma_levels,
+                                                     grid=grid, dim='Y',method='conservative')
+        
+        depth = xr.ones_like(sigma) * ds['lev'] # get 4D var for depth
+        depth_sigma = transport_sigma(sigma, depth, target_sigma_levels,
+                                      grid=grid, dim=None, method='linear')
+        
+        # -------------------- Save final diagnostics (point 6) ------------------------- #
+        save_file = (save_path + "Zonal_Transport_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")  
+        save_data(Zonal_Transport_sigma, save_file, "Zonal_Transport_sigma", 
+                  long_name="Zonal velocity x layer thickness", var_units="m^2/s")
+        
+        save_file = (save_path + "Meridional_Transport_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")
+        save_data(Zonal_Transport_sigma, save_file, "Zonal_Transport_sigma", 
+                  long_name="Meridional velocity x layer thickness", var_units="m^2/s")
+        
+        save_file = (save_path + "Depth_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")
+        save_data(depth_sigma, save_file, "Depth_sigma", 
+                  long_name="Depth of density layer", var_units="m")
+        
         ds.close()
-        gc.collect()
-        client.run(gc.collect)
         
-        client.restart()
-        
-#client.close()
 print('Closing cluster')
-#client.run_on_scheduler(stop, wait=False)
+client.run_on_scheduler(stop, wait=False)
+        
+"""
+        # -------------------- Computating Overturning (point 4) ------------------------- #
+        ds_save = xr.Dataset() # creating dataset for saving results
+        
+        # first create xarray dataarray for overturning vars
+        lat_range = np.arange(2., 70., 1.) # lat values at which overturning is computed
+        
+        tmp_array_sigma = np.empty((len(ds['time']), len(Meridional_Transport_sigma['sigma0']), len(lat_range)))
+        tmp_array_z = np.empty((len(ds['time']), len(Meridional_Transport['lev']), len(lat_range)))
+        
+        ds_save['Overturning_sigma'] = xr.DataArray(data=tmp_array_sigma.copy(), 
+                                                    coords={'time':ds['time'], 
+                                                            'sigma0': Zonal_Transport_sigma['sigma0'],
+                                                            'lat': lat_range},
+                                                    dims=['time', 'sigma0','lat'])
+        
+        ds_save['Overturning_z'] = xr.DataArray(data=tmp_array_z.copy(), coords={'time':ds['time'],
+                                                                                 'lev': Zonal_Transport['lev'],
+                                                                                 'lat': lat_range},
+                                                dims=['time', 'lev','lat'])
+
+        
+        ds_save['Overturning_sigma'] = meridional_overturning(ds_save['Overturning_sigma'], 
+                                                              Zonal_Transport_sigma, Meridional_Transport_sigma, ds['latitude'], lat_range,
+                                                              ds['dx_v'], ds['dy_u'], grid, ds_mask['mask_North_Atl_u'],
+                                                              ds_mask['mask_North_Atl_v'], dim='sigma0')
+        
+        ds_save['Overturning_z'] = meridional_overturning(ds_save['Overturning_z'], Zonal_Transport,
+                                                          Meridional_Transport, ds['latitude'], lat_range,
+                                                          ds['dx_v'], ds['dy_u'], grid, ds_mask['mask_North_Atl_u'],
+                                                          ds_mask['mask_North_Atl_v'], dim='lev')
+        ds_save['Overturning_z'] = ds_save['Overturning_z'] - ds_save['Overturning_z'].isel(lev=-1) # to integrate from top to bottom
+        
+        # -------------------- Regridding Data (point 5) ------------------------- #
+"""        
         
         
         

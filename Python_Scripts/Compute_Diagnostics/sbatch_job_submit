@@ -1,16 +1,16 @@
 #!/bin/bash
 # SBATCH --partition=par-multi 
-# SBATCH --partition=par-single
+#SBATCH --partition=par-single
 # SBATCH --partition=test
-# SBATCH --ntasks=16
-#SBATCH --partition=high-mem
-#SBATCH --mem=64GB
+#SBATCH --ntasks=16
+# SBATCH --partition=high-mem
+# SBATCH --mem=64GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=24:00:00
+#SBATCH --time=8:00:00
 
 # load python3 module
 # module add jaspy/3.7/r20181219
@@ -20,7 +20,8 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # Execute python script
 
-srun python Overturning_transport_depth_sigma.py
+# srun python Overturning_transport_depth_sigma.py
+mpirun python Overturning_transport_regridded.py
 
 # mpirun python Composite_3D_NAO_phase.py
 
