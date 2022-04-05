@@ -59,7 +59,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
 
 year1, year2 = (1978, 1980)
-var_list = ['thetao', 'so', 'vo']
+var_list = ['thetao', 'so', 'vo', 'uo']
 
 # define sigma levels for transform
 a = np.arange(15., 20., 2.0)

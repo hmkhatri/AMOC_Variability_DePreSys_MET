@@ -81,7 +81,7 @@ ppdir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/" # this is for 3D vars
 
 #var_list = ['hfds'] #, 'tos', 'sos'] #, 'mlotst', 'zos']
-var_list = ['vo'] #['thetao', 'vo', 'uo']
+var_list = ['so'] #['thetao', 'vo', 'uo', 'uo']
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
@@ -89,7 +89,7 @@ dropvars = ['vertices_latitude', 'vertices_longitude', 'time_bnds', 'lev_bnds']
 
 for var in var_list:
     
-    for r in range(6,7,1):
+    for r in range(0,10,1):
        
         print("Var = ", var, "; Ensemble = ", r)
 
@@ -133,12 +133,12 @@ for var in var_list:
         #if(var=='thetao'):
         #ds = ds.chunk({'start_year':1, 'lev':10})
         #else:
-        ds = ds.chunk({'start_year':-1})
+        #ds = ds.chunk({'start_year':-1})
         
         print("Data read complete")
         
         # loop over lead year and compute mean values
-        for lead_year in range(0,11): #(0,11):
+        for lead_year in range(0,11):
     
             #print("Lead Year running = ", lead_year)
 
@@ -167,7 +167,7 @@ for var in var_list:
 
             print("File saved for Lear Year = ", lead_year+1)
             
-            #client.cancel([ds_var, ds_save])
+            client.cancel([ds_var, ds_save])
             ds_save.close()
             ds_var.close()
             
@@ -176,15 +176,14 @@ for var in var_list:
             
             gc.collect()
         
-        #client.cancel([ds])
+        client.cancel([ds])
         ds.close()
-        del ds
         gc.collect()
         client.run(gc.collect)
         
         print("Completed r = ", r+1)
         
-        client.restart()
+        #client.restart()
 
 print('Closing cluster')
 client.run_on_scheduler(stop, wait=False)
