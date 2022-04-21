@@ -2,18 +2,20 @@
 Author: Hemant Khatri
 Email: hkhatri@liverpool.ac.uk
 
-This script computes zonal and meridional transport at fixed density levels from velocity data at depth-levels. 
-1. Potential densities are computed using monthly Temparature and Salinity. 
-2. xgcm transform funtionality is used for computing transport at fixed density levels.
-3. Depths of these density isolines are also computed. 
+This script computes overturning circulation at different density and depth levels. 
+1. Read u, v data on z-levels and transport data on density-levels.
+2. Compute overturning by integrating transport in the zonal direction as well as in the direction of increasing depth (or density).
+3. Compute Meridional heat transport in sigma layers as well as at z-levels.
 4. Finally, data is saved in netcdf format.
 
 This script makes use of xarray, dask, xgcm libraries for computations and working with netcdf files. 
 The code can work in serial mode as well as in parallel (see below for details). 
 
-For parallelization, daks-mpi (http://mpi.dask.org/en/latest/) is used to initialize multiple workers on a dask client. This is to ensure that dask is aware of multiple cores assigned through slurm batch submission job. 
 With dask, chunksizes are very important. Generally, it is good to have chunksize of 10-100 MB. 
-For this script, it is recomended to use chunks={'time':1, 'j':45, 'lev':-1}, for which computations are found to be very efficient.
+For this script, it is recomended to use chunks={'time':1, 'lev':12}, chunks={'time':1, 'sigma0':12}.
+However, the most efficient chunking varies from dataset to dataset. Some manual testing is required to find the most suitable chunking method.
+
+For parallelization, daks-mpi (http://mpi.dask.org/en/latest/) is used to initialize multiple workers on a dask client. This is to ensure that dask is aware of multiple cores assigned through slurm batch submission job. 
 
 Instead of dask-mpi, one could also use dask jobqueue (http://jobqueue.dask.org/en/latest/), which is very effective for interactive dask session on jupyter notebook or ipython console.
 
@@ -40,8 +42,7 @@ warnings.filterwarnings('ignore')
 #initialize()
 
 #from dask.distributed import Client, performance_report
-#client = Client() # don't use processes=True/False inside (), it will get stuck
-#print(client)
+#client = Client()
 
 #os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
 #os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
@@ -123,7 +124,7 @@ def transport_z(ds_vel, z_lev, grid, assign_name='transport'):
     transport = transport.fillna(0.).rename(assign_name)
     
     return transport
-    
+
 def transport_sigma(pot_density, transport, density_levels, grid, dim=None, method='linear'):
     
     """Compute volume transport in density layers using xgcm.transform method 
@@ -154,27 +155,75 @@ def transport_sigma(pot_density, transport, density_levels, grid, dim=None, meth
     
     return transport_sigma
 
-def save_data(data_var, save_location, short_name, long_name=None, var_units=None):
-    """Save final diagnostics in netcdf format
+def Compute_Heat_transport(Field, Velocity, grid, dim, const_multi = 1.):
+    
+    """Compute transport of field along velocity component 
     Parameters
     ----------
-    data_var : xarray DataArray
-    save_location : string - location for saving data including filename
-    short_name : string - name for the variable
-    long_name : string - long name for the variable
-    var_units : string - dimensional units
+    Field : xarray DataArray - tracer field
+    Velocity : xarray DataArray - velocity along any cartesian direction
+    grid : xgcm Grid object
+    dim : strig - dimension name
+    const_multi : constant - multiplier
+    
+    Returns
+    -------
+    Transport : xarray DataArray for volume transport
     """
     
-    data_save = data_var.astype(np.float32).to_dataset(name=short_name)
-    data_save[short_name].attrs['units'] = var_units
-    data_save[short_name].attrs['long_name'] = long_name
+    Field_vel = grid.interp(Field, [dim], boundary='extend') # interpolate field to velocity grid
     
-    data_save = data_save.compute() # compute before saving
-    data_save.to_netcdf(save_location)
+    Transport = Field_vel * Velocity * const_multi
     
-    print("Data saved succefully - ", short_name)
+    return Transport
+
+def Compute_Overturning(Transport, dx = 1., dim_v='Z', dim_x = 'X', long_name=None):
     
-    data_save.close()
+    """Compute Overturning circulation using meridional velocity x thickness data
+    Parameters
+    ----------
+    Transport : xarray DataArray - meridional velocity x layer thickness
+    dx : xarray DataArray - Zonal grid spacing
+    dim_v : Vertical dimension name
+    dim_x : Zonal dimension name
+    long_name : string - long name for the variable
+    
+    Returns
+    -------
+    overturning : xarray DataArray - overturning circulation
+    """
+    
+    overturning = (Transport * dx).sum(dim=dim_x).cumsum(dim=dim_v)
+    overturning.attrs['units'] = "m^3/s"
+    overturning.attrs['long_name'] = long_name
+    
+    return overturning
+
+def Meridional_Heat_Transport(Transport, Heat, dx = 1., dim_x = 'X', long_name=None):
+    
+    """Compute Meriidonal Heat Transport corresponding to meridional overturning circulation
+    Parameters
+    ----------
+    Transport : xarray DataArray - meridional velocity x layer thickness
+    Heat : xarray DataArray - Heat Content
+    dx : xarray DataArray - Zonal grid spacing
+    dim_x : Zonal dimension name
+    long_name : string - long name for the variable
+    
+    Returns
+    -------
+    Meridional_Heat_Transport : xarray DataArray - meridional heat transport due to overturning circulation
+    """
+    
+    Transport_Meridional = (Transport * dx).sum(dim=dim_x) # first get net meridional volume transport
+    Meridional_Heat = (Heat * dx).sum(dim=dim_x) / dx.sum(dim=dim_x) # zonal mean of heat content
+    
+    Meridional_Heat_Transport = Transport_Meridional * Meridional_Heat
+    
+    Meridional_Heat_Transport.attrs['units'] = "Joules/s"
+    Meridional_Heat_Transport.attrs['long_name'] = long_name
+    
+    return Meridional_Heat_Transport
 
 async def stop(dask_scheduler):
     """To close all workers after job completion
@@ -183,26 +232,31 @@ async def stop(dask_scheduler):
     await dask_scheduler.close()
     loop = dask_scheduler.loop
     loop.add_callback(loop.stop)
-
+    
 ### ------------- Main computations ------------
 
 # first define paths for reading data and saving final diagnostics 
 data_dir="/badc/cmip6/data/CMIP6/DCPP/MOHC/HadGEM3-GC31-MM/dcppA-hindcast/"
-save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
+save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Overturning_Heat_Transport/"
 
 # read grid information and masking data
 ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
 ds_mask = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Mask_UV_grid.nc")
 
-year1, year2 = (2002, 2017) # range of years for reading data 
-var_list = ['thetao', 'so', 'vo', 'uo'] # list of variables to be read from model output
+year1, year2 = (1960, 2017) # range of years for reading data 
+var_list = ['vo', 'uo', 'thetao', 'so'] # list of variables to be read from model output
+
+datadir_sigma ="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
+var_sigma_list = ['Zonal_Transport_sigma_', 'Meridional_Transport_sigma_', 'Depth_sigma_']
+
+rho_cp = 4.09 * 1.e6 # constant from Williams et al. 2015
 
 # get sigma levels
 sigma_min, sigma_max = (15., 31.1) 
 target_sigma_levels = density_levels(density_min=sigma_min, density_max=sigma_max)
 
 # Loop for going through multiple ensemble and hindcast members for computations
-for r in range(1,2):
+for r in range(1,3):
     
     for year in range(year1, year2, 1):
         
@@ -231,14 +285,37 @@ for r in range(1,2):
             ds.append(d)
 
         ds = xr.merge(ds) # merge to get a single dataset
-        #ds = xr.merge([ds, ds_grid['dx_v'].rename({'x':'i', 'yv':'j_c'}), 
-        #               ds_grid['dy_u'].rename({'xu':'i_c', 'y':'j'})]) 
+        ds = xr.merge([ds, ds_grid['dx_v'].rename({'x':'i', 'yv':'j_c'}), 
+                       ds_grid['dy_u'].rename({'xu':'i_c', 'y':'j'})]) 
+        
+        """
+        # Read transport data on density-levels
+        ds_sigma = []
+
+        for var in var_sigma_list:
+            
+            var_path = datadir_sigma + var + str(year) +"_r" + str(r+1) + ".nc"
+            with xr.open_mfdataset(var_path, parallel=True, chunks={'time':1, 'sigma0':12}, 
+                                   engine='netcdf4') as d:
+                d = d
+
+            if(var == 'Depth_sigma_'):
+                d = d.rename({'sigma0':'sigma0_bnds'})
+
+            ds_sigma.append(d)
+
+        ds_sigma = xr.merge(ds_sigma)
+        
+        ds = xr.merge([ds, ds_sigma])
+        
+        ds = ds.chunk({'j':45, 'j_c':45})
+        """
         
         print("Data read complete")
-        
-        # ---------------------- Computations (points 1-3) ------------------------- #
+
+        # ---------------------- Computations (point 2-3) ------------------------- #
         # create outer depth levels (required for transforming to density levels)
-        level_outer_data = (cf_xarray.bounds_to_vertices(ds['lev_bnds'].isel(time=0),
+        level_outer_data = (cf_xarray.bounds_to_vertices(ds['lev_bnds'].isel(time=0).chunk({'lev':-1}),
                                                          'bnds').load().data)
         ds = ds.assign_coords({'level_outer': level_outer_data})
         
@@ -246,51 +323,74 @@ for r in range(1,2):
         grid = Grid(ds, coords={'Z': {'center': 'lev', 'outer': 'level_outer'},
                                 'X': {'center': 'i', 'right': 'i_c'},
                                 'Y': {'center': 'j', 'right': 'j_c'}}, periodic=[],)
-        
-        # compute density (xr.apply_ufunc ensures that non-xarray operations are efficient with dask
-        sigma = xr.apply_ufunc(compute_density, ds['so'], ds['thetao'], dask='parallelized',
-                               output_dtypes=[ds['thetao'].dtype])
-        sigma = sigma.rename('sigma0').persist()
-        
-        # compute zonal and meridional transport
-        Zonal_Transport = transport_z(ds['uo'], ds['level_outer'], grid, 
-                                      assign_name='Zonal_Transport')
+
+        # compute meridional volume and heat transport on z-levels
         Meridional_Transport = transport_z(ds['vo'], ds['level_outer'], grid, 
                                            assign_name='Meridional_Transport')
         
-        # compute zonal/meridional transport on sigma levels and depth of density isolines
-        Zonal_Transport_sigma = transport_sigma(sigma, Zonal_Transport, target_sigma_levels, 
-                                                grid=grid, dim='X', method='conservative')
+        Heat_Transport = Compute_Heat_transport(ds['thetao'], Meridional_Transport, grid = grid, 
+                                                dim = 'Y', const_multi = rho_cp)
+        
+        # compute meridional volume and heat transport on sigma-levels
+        # conserve vertically integrated volume transport and heat transport
+        sigma = xr.apply_ufunc(compute_density, ds['so'], ds['thetao'], dask='parallelized',
+                               output_dtypes=[ds['thetao'].dtype])
+        sigma = sigma.rename('sigma0') #.persist()
         
         Meridional_Transport_sigma = transport_sigma(sigma, Meridional_Transport, target_sigma_levels,
                                                      grid=grid, dim='Y',method='conservative')
         
-        depth = xr.ones_like(sigma) * ds['lev'] # get 4D var for depth
-        depth_sigma = transport_sigma(sigma, depth, target_sigma_levels,
-                                      grid=grid, dim=None, method='linear')
+        Heat_Transport_sigma = transport_sigma(sigma, Heat_Transport, target_sigma_levels,
+                                               grid=grid, dim='Y',method='conservative')
         
-        # -------------------- Save final diagnostics (point 4) ------------------------- #
-        save_file = (save_path + "Zonal_Transport_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")  
-        save_data(Zonal_Transport_sigma, save_file, "Zonal_Transport_sigma", 
-                  long_name="Zonal velocity x layer thickness", var_units="m^2/s")
+        Meridional_Transport_sigma = Meridional_Transport_sigma #.persist()
+        Heat_Transport_sigma = Heat_Transport_sigma #.persist()
         
-        save_file = (save_path + "Meridional_Transport_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")
-        save_data(Meridional_Transport_sigma, save_file, "Meridional_Transport_sigma", 
-                  long_name="Meridional velocity x layer thickness", var_units="m^2/s")
+        # Overturning computations
+        dx_v = ds['dx_v'].where(ds_mask['mask_North_Atl_v'] == 0.).compute() # dx mask for North Atlantic
         
-        save_file = (save_path + "Depth_sigma_"+ str(year) + "_r" + str(r+1) + ".nc")
-        save_data(depth_sigma, save_file, "Depth_sigma", 
-                  long_name="Depth of density layer", var_units="m")
+        ds_save = xr.Dataset()
         
+        ds_save['latitude'] = ds['latitude_v'].where(ds_mask['mask_North_Atl_v']).mean('i').compute()
+        
+        ds_save['Overturning_z'] = Compute_Overturning(Meridional_Transport, dx = dx_v, dim_v = 'lev', 
+                                                       dim_x = 'i', long_name="Overturning circulation vs depth")
+        ds_save['Overturning_z'] = ds_save['Overturning_z'] - ds_save['Overturning_z'].isel(lev=-1) # to integrate from top to bottom
+        
+        ds_save['Overturning_sigma'] = Compute_Overturning(Meridional_Transport_sigma, dx = dx_v, dim_v = 'sigma0', 
+                                                           dim_x = 'i', long_name="Overturning circulation vs sigma0")
+        
+        # Meridional Heat Transport computations
+        ds_save['MHT_sigma'] = (Heat_Transport_sigma * dx_v).sum(dim='i')
+        ds_save['MHT_sigma'].attrs['units'] = "Joules/s"
+        ds_save['MHT_sigma'].attrs['long_name'] = "Meridional heat transport"
+        
+        heat_content_sigma = (Heat_Transport_sigma / Meridional_Transport_sigma)
+        ds_save['MHT_overturning_sigma'] = Meridional_Heat_Transport(Meridional_Transport_sigma, heat_content_sigma, 
+                                                                     dx = dx_v, dim_x = 'i',
+                                                                     long_name="Meridional heat transport due to overturning circulation")
+        
+        ds_save['MHT_z'] = (Heat_Transport * dx_v).sum(dim='i')
+        ds_save['MHT_z'].attrs['units'] = "Joules/s"
+        ds_save['MHT_z'].attrs['long_name'] = "Meridional heat transport"
+        
+        heat_content_z = (Heat_Transport / Meridional_Transport)
+        ds_save['MHT_overturning_z'] = Meridional_Heat_Transport(Meridional_Transport, heat_content_z, dx = dx_v, dim_x = 'i', 
+                                                                 long_name="Meridional heat transport due to overturning circulation")
+        
+        # --------------------- Save data (point 4) -------------------------- #
+        save_file_path = (save_path + "Overturning_Heat_Transport_"+ str(year) + "_r" + str(r+1) + ".nc")
+        
+        ds_save = ds_save.compute() # compute before saving
+        ds_save.to_netcdf(save_file_path)
+    
+        print("Data saved succefully")
+        
+        ds_save.close()
         ds.close()
-        
-        #client.cancel([sigma, Zonal_Transport, Meridional_Transport, depth,
-        #              Zonal_Transport_sigma, Meridional_Transport_sigma, depth_sigma])
         
         #client.run(gc.collect)
         
 print('Closing cluster')
-#client.run_on_scheduler(stop, wait=False)     
-        
-        
+#client.run_on_scheduler(stop, wait=False)
         
