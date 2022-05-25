@@ -101,13 +101,13 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Heat_Budget/"
 # read grid information and masking data
 ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
 
-year1, year2 = (1960, 2017) # range of years for reading data 
+year1, year2 = (1960, 1995) # range of years for reading data 
 var_list = ['thetao', 'vo', 'uo', 'wo'] # list of variables to be read from model output
 
 rho_cp = 4.09 * 1.e6 # constant from Williams et al. 2015
 
 # Loop for going through multiple ensemble and hindcast members for computations
-for r in range(1,3):
+for r in range(9,10):
     
     for year in range(year1, year2, 1):
         
@@ -120,7 +120,7 @@ for r in range(1,3):
             var_path = (data_dir + "s" + str(year) +"-r" + str(r+1) + 
                         "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
 
-            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
+            with xr.open_mfdataset(var_path, preprocess=select_subset, # parallel=True,
                                    chunks={'time':1}, engine='netcdf4') as d:
                 d = d 
             # chunksize is decided such a way that 

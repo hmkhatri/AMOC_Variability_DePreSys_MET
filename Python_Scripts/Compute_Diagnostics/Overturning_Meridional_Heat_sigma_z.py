@@ -256,7 +256,7 @@ sigma_min, sigma_max = (15., 31.1)
 target_sigma_levels = density_levels(density_min=sigma_min, density_max=sigma_max)
 
 # Loop for going through multiple ensemble and hindcast members for computations
-for r in range(1,3):
+for r in range(8,9):
     
     for year in range(year1, year2, 1):
         
@@ -269,7 +269,7 @@ for r in range(1,3):
             var_path = (data_dir + "s" + str(year) +"-r" + str(r+1) + 
                         "i1p1f2/Omon/" + var + "/gn/latest/*.nc")
 
-            with xr.open_mfdataset(var_path, parallel=True, preprocess=select_subset, 
+            with xr.open_mfdataset(var_path, preprocess=select_subset, 
                                    chunks={'time':1, 'j':45}, engine='netcdf4') as d:
                 d = d 
             # chunksize is decided such a way that 
@@ -381,7 +381,7 @@ for r in range(1,3):
         # --------------------- Save data (point 4) -------------------------- #
         save_file_path = (save_path + "Overturning_Heat_Transport_"+ str(year) + "_r" + str(r+1) + ".nc")
         
-        ds_save = ds_save.compute() # compute before saving
+        ds_save = ds_save.astype(np.float32).compute() # compute before saving
         ds_save.to_netcdf(save_file_path)
     
         print("Data saved succefully")
