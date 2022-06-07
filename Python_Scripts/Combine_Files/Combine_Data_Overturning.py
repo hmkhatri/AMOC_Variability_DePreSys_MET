@@ -46,7 +46,7 @@ save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Temp/"
 
 year1, year2 = (1960, 2017)
 
-for r in range(4, 5, 1):
+for r in range(9, 10, 1):
 
     ds1 = []
     
