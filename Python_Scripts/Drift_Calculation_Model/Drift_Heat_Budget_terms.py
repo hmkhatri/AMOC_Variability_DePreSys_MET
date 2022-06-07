@@ -46,12 +46,13 @@ def processDataset(ds1, y1, y2, lead_yr):
 
 # ----------- Main computations -----------------
 data_dir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Heat_Budget/"
-#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/Heat_Budget/drift_budget_terms/"
-save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/Heat_Budget/drift_budget_terms/"
+
+#save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Drift_Removal/Drift_1970_2016_Method_DCPP/"
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
-for r in range(0,9):
+for r in range(9,10):
     
     print("Var = Heat Budget diagnostics", "; Ensemble = ", r)
     

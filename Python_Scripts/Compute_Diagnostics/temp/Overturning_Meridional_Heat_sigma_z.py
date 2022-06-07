@@ -243,7 +243,7 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Overturning_Heat_Transpor
 ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Ocean_Area_Updated.nc")
 ds_mask = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Mask_UV_grid.nc")
 
-year1, year2 = (1960, 2017) # range of years for reading data 
+year1, year2 = (1960, 1990) # range of years for reading data 
 var_list = ['vo', 'uo', 'thetao', 'so'] # list of variables to be read from model output
 
 datadir_sigma ="/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/Transport_sigma/Temp/"
@@ -256,7 +256,7 @@ sigma_min, sigma_max = (15., 31.1)
 target_sigma_levels = density_levels(density_min=sigma_min, density_max=sigma_max)
 
 # Loop for going through multiple ensemble and hindcast members for computations
-for r in range(7,8):
+for r in range(9,10):
     
     for year in range(year1, year2, 1):
         
