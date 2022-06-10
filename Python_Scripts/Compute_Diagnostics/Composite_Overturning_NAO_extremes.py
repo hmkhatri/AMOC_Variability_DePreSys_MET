@@ -101,12 +101,19 @@ for tim_ind in range(4,13,4):
                 
                 ds1 = d.sel(start_year=year).drop(['start_year']) - ds_drift.isel(r=r)
                 
+                # compute anomalye in overturning maximum
+                ds1['Overturning_max_z'] = ((d['Overturning_z'].sel(start_year=year).drop(['start_year'])).max(dim='lev') - 
+                                            (ds_drift['Overturning_z'].isel(r=r)).max(dim='lev'))
+                
+                ds1['Overturning_max_sigma'] = ((d['Overturning_sigma'].sel(start_year=year).drop(['start_year'])).max(dim='sigma0') -
+                                                (ds_drift['Overturning_sigma'].isel(r=r)).max(dim='sigma0'))
+                
                 ds.append(ds1.isel(time = slice((int(tim_ind/4)-1)*12, (int(tim_ind/4) + 7)*12 + 5)))
 
 ds = xr.concat(ds, dim='comp')
 
 ds = ds.drop('latitude')
-ds['latitude'] = d['latitude'].isel(start_year=0) # get actual latitude values for overturning
+ds['latitude'] = ds_drift['latitude'].isel(r=0, time=0) # get actual latitude values for overturning
     
 print("Composite Data read complete")
 print("Total cases = ", len(ds['comp']), " - case ", case)

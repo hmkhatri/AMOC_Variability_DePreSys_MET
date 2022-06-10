@@ -50,8 +50,8 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-var_list = ['hfds'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-#var_list = ['tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
+#var_list = ['hfds'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
+var_list = ['tas', 'clt'] #, 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
@@ -69,8 +69,8 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 for var in var_list:
     
@@ -119,15 +119,15 @@ for var in var_list:
 
                 if(count_NAO.isel(r=r).sel(start_year=year) == 1):
 
-                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
-                    #var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/*.nc"
+                    #var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
+                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/*.nc"
                     
                     # this is for ocean vars
-                    with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
-                        d = d
+                    #with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
+                    #    d = d
                         
                     # this is for atmos vars
-                    #d = xr.open_mfdataset(var_path, chunks={'time':1}, engine='netcdf4')
+                    d = xr.open_mfdataset(var_path, chunks={'time':1}, engine='netcdf4')
                     
                     d = d[var].drop('time') - ds_drift[var].isel(r=r)
 
@@ -139,10 +139,10 @@ for var in var_list:
     print("Total cases = ", len(ds['comp']), " - case ", case)
     
     # if ocean vars
-    comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
+    #comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
     
     # if atmos. vars
-    #comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()
+    comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()
     
     save_file = save_path + "Composite_" + case + "_" + var + ".nc"
     comp_save.to_netcdf(save_file)

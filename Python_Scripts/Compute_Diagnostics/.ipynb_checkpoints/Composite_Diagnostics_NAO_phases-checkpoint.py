@@ -50,8 +50,8 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-#var_list = ['tos', 'mlotst'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-var_list = ['tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
+#var_list = ['hfds'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
+var_list = ['tas', 'clt'] #, 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
@@ -69,8 +69,8 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 for var in var_list:
     
