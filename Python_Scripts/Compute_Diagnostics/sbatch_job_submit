@@ -4,7 +4,7 @@
 # SBATCH --partition=test
 # SBATCH --ntasks=16 --nodes=1
 #SBATCH --partition=high-mem
-#SBATCH --mem=64GB
+#SBATCH --mem=128GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
@@ -38,9 +38,9 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Anomaly_SLP_NAO_compute.py
 
-# srun python Composite_Diagnostics_NAO_phases.py
+srun python Composite_Diagnostics_NAO_phases.py
 
-srun python Composite_Overturning_NAO_extremes.py
+# srun python Composite_Overturning_NAO_extremes.py
 
 # srun python Correlation_NAO_ocean_var.py
 
