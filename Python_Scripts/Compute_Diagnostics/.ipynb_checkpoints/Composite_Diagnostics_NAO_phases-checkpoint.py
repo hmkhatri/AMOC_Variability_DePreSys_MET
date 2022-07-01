@@ -50,8 +50,8 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-#var_list = ['hfds'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-var_list = ['psl'] #,'tas', 'clt', 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
+var_list = ['vo'] #['thetao', 'mlotst', 'tos', 'sos', 'hfds'] # ocean vars
+#var_list = ['psl'] #,'tas', 'clt', 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
@@ -69,8 +69,8 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 for var in var_list:
     
@@ -85,7 +85,8 @@ for var in var_list:
         for lead_year in range(0,11):
 
             d = xr.open_dataset(ppdir_drift + var + "/Drift_"+ var + "_r" + 
-                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc")
+                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc",
+                                chunks={'time':1}, engine='netcdf4')
             d = d.assign(time = np.arange(lead_year*12, 12*lead_year +  np.minimum(12, len(d['time'])), 1))
             ds1.append(d)
 
@@ -94,14 +95,14 @@ for var in var_list:
 
     ds_drift = xr.concat(ds_drift, dim='r')
     ds_drift = ds_drift.drop('time')
-    ds_drift = ds_drift.chunk({'time':1})
+    #ds_drift = ds_drift.chunk({'time':1})
 
     print("Drift Data read complete")
     
     ds = []
     for tim_ind in range(4,13,4):
         
-        print("Running Heat Budget composite for - ", case, "and time index - ", tim_ind)
+        print("Running composite for - ", case, "and time index - ", tim_ind)
     
         ind_NAOp = xr.where(NAO_season.isel(time=tim_ind) >= NAO_cut, 1, 0)
         ind_NAOn = xr.where(NAO_season.isel(time=tim_ind) <= -NAO_cut, 1, 0)
@@ -117,17 +118,16 @@ for var in var_list:
         
             for year in range(year1, year2, 1):
 
-                if(count_NAO.isel(r=r).sel(start_year=year) == 1):
-
-                    #var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
-                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/*.nc"
+                if(count_NAO.isel(r=r).sel(start_year=year) == 1): 
                     
                     # this is for ocean vars
-                    #with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
-                    #    d = d
+                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
+                    with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
+                        d = d
                         
                     # this is for atmos vars
-                    d = xr.open_mfdataset(var_path, chunks={'time':1}, engine='netcdf4')
+                    #var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/*.nc"
+                    #d = xr.open_mfdataset(var_path, chunks={'time':1}, engine='netcdf4')
                     
                     d = d[var].drop('time') - ds_drift[var].isel(r=r)
 
@@ -141,8 +141,12 @@ for var in var_list:
     # if ocean vars
     #comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
     
+    # if 3D ocean vars to save vertical sections
+    #ds = ds.chunk({'lev':5})
+    comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).mean('comp').compute()
+    
     # if atmos. vars
-    comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()
+    #comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()
     
     save_file = save_path + "Composite_" + case + "_" + var + ".nc"
     comp_save.to_netcdf(save_file)
