@@ -23,7 +23,10 @@
 | [Combine_Data_Atmosphere_var.py](./Combine_Files/Combine_Data_Atmosphere_var.py) | To save different atmospheric diagnostics in the same file |
 | [Combine_Data_Ocean_Surface_grid_T.py](./Combine_Files/Combine_Data_Ocean_Surface_grid_T.py) | To save different ocean diagnostics in the same file |
 | [Combine_Data_Overturning.py](./Combine_Files/Combine_Data_Overturning.py) | To save overturning and heat/salt transport diagnostics in the same file |
+| [Combine_overturning_transport_sigma.py](./Combine_Files/Combine_overturning_transport_sigma.py) | To regrid transport, thickness in density layers to coarse 2D grid and save combined data |
 | | |
-| [Combine_Data_Atmosphere_var.py](./Combine_Files/Combine_Data_Atmosphere_var.py) | To save composite timeseries of ocean vars corresponding to NAO extreme members |
+| [Composite_Diagnostics_NAO_phases.py](./Compute_Diagnostics/Composite_Diagnostics_NAO_phases.py) | To save composites of ocean/atmosphere vars for selected members based on NAO extreme values |
+| [Composite_Overturning_NAO_extremes.py](./Compute_Diagnostics/Composite_Overturning_NAO_extremes.py) | To save composites of overturning-related diagnostics for selected members based on NAO extreme values |
+| [Composite_Heat_Budget_NAO_extreme.py](./Compute_Diagnostics/Composite_Heat_Budget_NAO_extreme.py) | To save composites of heat budget diagnostics for selected members based on NAO extreme values |
 | | |
 | [sbatch_job_submit](./sbatch_job_submit) | To submit python jobs on slurm cluster | 
