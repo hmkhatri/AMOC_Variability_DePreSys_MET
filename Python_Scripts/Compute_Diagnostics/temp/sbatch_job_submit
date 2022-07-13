@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH --partition=par-multi 
+# SBATCH --partition=par-multi 
 # SBATCH --partition=par-single
 # SBATCH --partition=test
-#SBATCH --ntasks=64 --nodes=8
-# SBATCH --partition=high-mem
-# SBATCH --mem=64GB
+# SBATCH --ntasks=32 --nodes=2
+#SBATCH --partition=high-mem
+#SBATCH --mem=256GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=23:00:00
+#SBATCH --time=47:00:00
 
 # load python3 module
 # module add jaspy/3.7/r20181219
@@ -24,7 +24,7 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # mpirun python Overturning_sigma_z.py
 
-mpirun python Overturning_Meridional_Heat_sigma_z.py 
+srun python Overturning_Meridional_Heat_sigma_z.py 
 
 # srun python Heat_Budget.py
 

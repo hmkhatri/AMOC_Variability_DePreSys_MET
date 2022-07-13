@@ -10,18 +10,22 @@
 import numpy as np
 import scipy as sc
 import xarray as xr
-from dask.distributed import Client, LocalCluster
+from distributed import Client
 from dask import delayed
 from dask import compute
-from dask.diagnostics import ProgressBar
+#from dask.diagnostics import ProgressBar
 
 import warnings
 warnings.filterwarnings('ignore')
 
-#from dask_mpi import initialize
+from dask_mpi import initialize
 
-#initialize()
-#client = Client()
+initialize()
+client = Client()
+
+os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
+os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
+os.environ["MALLOC_TRIM_THRESHOLD_"]=str(0)
 
 ### ------ Functions for computations ----------
 
@@ -50,7 +54,7 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-var_list = ['vo'] #['thetao', 'mlotst', 'tos', 'sos', 'hfds'] # ocean vars
+var_list = ['so'] #['thetao', 'mlotst', 'tos', 'sos', 'hfds'] # ocean vars
 #var_list = ['psl'] #,'tas', 'clt', 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
@@ -69,8 +73,8 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-#case = 'NAOp' 
-case = 'NAOn'
+case = 'NAOp' 
+#case = 'NAOn'
 
 for var in var_list:
     

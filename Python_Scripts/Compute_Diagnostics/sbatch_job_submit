@@ -2,9 +2,9 @@
 # SBATCH --partition=par-multi 
 # SBATCH --partition=par-single
 # SBATCH --partition=test
-# SBATCH --ntasks=16 --nodes=1
+# SBATCH --ntasks=32
 #SBATCH --partition=high-mem
-#SBATCH --mem=128GB
+#SBATCH --mem=256GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
@@ -13,9 +13,10 @@
 #SBATCH --time=47:00:00
 
 # load python3 module
-# module add jaspy/3.7/r20181219
+# module add jaspy
 
 source /home/users/hkhatri/miniconda3/bin/activate
+
 # module load eb/OpenMPI/gcc/4.0.0
 
 # Execute python script
