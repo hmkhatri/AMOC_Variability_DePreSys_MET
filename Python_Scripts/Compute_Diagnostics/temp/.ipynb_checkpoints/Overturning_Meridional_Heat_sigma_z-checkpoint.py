@@ -274,7 +274,7 @@ def Meridional_Heat_Transport(Transport, Heat, dx = 1., dim_x = 'X', long_name=N
 
     return Meridional_Heat_Transport
 
-def Meridional_Tracer_Transport_Overturning(Transport, Field, dx = 1., dim_x = 'X', dimen = None, long_name = None):
+def Meridional_Tracer_Transport_Overturning(Transport, Field, dx = 1., dz = 1., dim_x = 'X', dimen = None, long_name = None):
 
     """Compute Meriidonal Heat Transport corresponding to meridional overturning circulation
     Parameters
@@ -282,6 +282,7 @@ def Meridional_Tracer_Transport_Overturning(Transport, Field, dx = 1., dim_x = '
     Transport : xarray DataArray - meridional velocity x layer thickness
     Field : xarray DataArray - Tracer Field
     dx : xarray DataArray - Zonal grid spacing
+    dz : xarray DataArray - Layer thicknesses
     dim_x : Zonal dimension name
     dimen : string - dimentional units for output
     long_name : string - long name for output
@@ -292,8 +293,9 @@ def Meridional_Tracer_Transport_Overturning(Transport, Field, dx = 1., dim_x = '
     """
 
     Transport_Meridional = (Transport * dx).sum(dim=dim_x) # first get net meridional volume transport
-    Meridional_Tracer = (Field * dx).sum(dim=dim_x) / (Field * dx / Field).sum(dim=dim_x) # zonal mean of tracer content
+    Meridional_Tracer = (Field * dx).sum(dim=dim_x) / ((dz * dx).sum(dim=dim_x) + 1.e-10) # zonal mean of tracer content
     # Field /Field is used in denominator, so only wet grid points are considered
+    # + 1.e-10 is to avoid 0./0. situations
 
     Meridional_Tracer_Transport = Transport_Meridional * Meridional_Tracer
 
@@ -329,15 +331,14 @@ def Zonal_Mean_Depth(pot_density, depth, density_levels, grid, dx = 1., dim=None
 
     sigma_interp = sigma_interp.rename('sigma0')
     depth_sigma = grid.transform(depth, 'Z', density_levels,
-                                 target_data=sigma_interp, method=method)
+                                 target_data=sigma_interp, method=method, mask_edges=True)
 
     depth_sigma = (depth_sigma * dx).sum(dim=dim_x) / (depth_sigma * dx / depth_sigma).sum(dim=dim_x) # zonal mean
 
     depth_sigma.sigma0.attrs['units'] = "kg/m^3"
     depth_sigma.sigma0.attrs['long_name'] = "Potential density with reference to ocean surface - 1000."
 
-    density_depth = (sigma_interp * dx).sum(dim=dim_x) / (sigma_interp * dx / 
-                                                          sigma_interp).sum(dim=dim_x) # zonal mean
+    density_depth = (sigma_interp * dx).sum(dim=dim_x) / (sigma_interp * dx / sigma_interp).sum(dim=dim_x) # zonal mean
 
     return depth_sigma, density_depth
 
@@ -419,8 +420,9 @@ for r in range(0,1):
                                 'X': {'center': 'i', 'right': 'i_c'},
                                 'Y': {'center': 'j', 'right': 'j_c'}}, periodic=[],)
         
-        cell_dz = grid.diff(ds['level_outer'], 'Z')
-        cell_dz = (cell_dz * ds['vo'] / ds['vo']).fillna(0.) # remove values for in-land grid cells
+        dz = grid.diff(ds['level_outer'], 'Z')
+        cell_dz = xr.ones_like(ds['vo']) * dz
+        cell_dz = cell_dz * (ds['vo'].isel(time=0) / ds['vo'].isel(time=0)).fillna(0.) # remove values for in-land grid cells
 
         dx_v = ds['dx_v'].where(ds_mask['mask_North_Atl_v'] == 0.).compute() # dx mask for North Atlantic
 
@@ -453,18 +455,20 @@ for r in range(0,1):
         Salt_Transport_sigma = transport_sigma(sigma, Salt_Transport, target_sigma_levels,
                                                grid=grid, dim='Y',method='conservative')
         
-        Thickness_sigma = transport_sigma(sigma, cell_dz, target_sigma_levels,
+        Thickness_sigma = transport_sigma(sigma, cell_dz.fillna(0.), target_sigma_levels,
                                           grid=grid, dim='Y',method='conservative')
 
         # get tracer values on density layers using linear interpolation
         thetao_vel = grid.interp(ds['thetao'], 'Y', boundary='extend') # interpolate to velocity grid
         so_vel = grid.interp(ds['so'], 'Y', boundary='extend') # interpolate to velocity grid
         
-        thetao_sigma = transport_sigma(sigma, thetao_vel, (target_sigma_levels[1:] + target_sigma_levels[:-1])*0.5,
-                                       grid=grid, dim='Y', method='linear') # for overturning heat transport
+        dz = grid.diff(ds['level_outer'], 'Z')
+        
+        thetao_sigma = transport_sigma(sigma, (thetao_vel * dz).fillna(0.), target_sigma_levels,
+                                       grid=grid, dim='Y', method='conservative') # for overturning heat transport
 
-        so_sigma = transport_sigma(sigma, so_vel, (target_sigma_levels[1:] + target_sigma_levels[:-1])*0.5,
-                                   grid=grid, dim='Y', method='linear') # for overturning FW transport
+        so_sigma = transport_sigma(sigma, (so_vel * dz).fillna(0.), target_sigma_levels,
+                                   grid=grid, dim='Y', method='conservative') # for overturning FW transport
         
         thetao_sigma = thetao_sigma.drop('sigma0') # to make the code faster
         so_sigma = so_sigma.drop('sigma0')
@@ -514,22 +518,22 @@ for r in range(0,1):
 
         
         with xr.set_options(keep_attrs=True):
-            heat_content_sigma = (thetao_sigma - tracer_baro['thetao']) * rho_cp
+            heat_content_sigma = (thetao_sigma - tracer_baro['thetao'] * Thickness_sigma) * rho_cp # thetao_sigma = theta x h
             transport = Meridional_Transport_sigma - Thickness_sigma * v_baro
             ds_save['MHT_overturning_sigma'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_sigma,
-                                                                           dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                           dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "Joules/s",
                                                                            long_name = "Meridional heat transport due to overturning circulation - Baroclinic v and Baroclinic theta")
 
-            heat_content_sigma = (thetao_sigma - tracer_baro['thetao']) * rho_cp
+            heat_content_sigma = (thetao_sigma - tracer_baro['thetao'] * Thickness_sigma) * rho_cp
             transport = Thickness_sigma * v_baro
             ds_save['MHT_overturning_sigma_baro_v'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_sigma,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                                       dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "Joules/s",
                                                                                        long_name = "Meridional heat transport due to overturning circulation - Barotropic v and Baroclinic theta")
 
-            heat_content_sigma = tracer_baro['thetao'] * rho_cp
+            heat_content_sigma = tracer_baro['thetao'] * Thickness_sigma * rho_cp
             transport = Meridional_Transport_sigma - Thickness_sigma * v_baro
             ds_save['MHT_overturning_sigma_baro_theta'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_sigma,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                                       dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "Joules/s",
                                                                                        long_name = "Meridional heat transport due to overturning circulation - Baroclinic v and Barotropic theta")
 
         ds_save['MHT_z'] = (Heat_Transport * dx_v).sum(dim='i')
@@ -541,22 +545,22 @@ for r in range(0,1):
         ds_save['MHT_z_baro'].attrs['long_name'] = "Meridional heat transport - Barotropic v and Barotropic theta"
 
         with xr.set_options(keep_attrs=True):
-            heat_content_z = (thetao_vel - tracer_baro['thetao']) * rho_cp
+            heat_content_z = (thetao_vel - tracer_baro['thetao']) * cell_dz * rho_cp
             transport = Meridional_Transport - cell_dz * v_baro
             ds_save['MHT_overturning_z'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "Joules/s",
                                                                                        long_name = "Meridional heat transport due to overturning circulation - Baroclinic v and Baroclinic theta")
 
-            heat_content_z = (thetao_vel - tracer_baro['thetao']) * rho_cp
+            heat_content_z = (thetao_vel - tracer_baro['thetao']) * cell_dz * rho_cp
             transport = cell_dz * v_baro
             ds_save['MHT_overturning_z_baro_v'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "Joules/s",
                                                                                        long_name = "Meridional heat transport due to overturning circulation - Barotropic v and Baroclinic theta")
 
-            heat_content_z = tracer_baro['thetao'] * rho_cp
+            heat_content_z = tracer_baro['thetao'] * cell_dz * rho_cp
             transport = Meridional_Transport - cell_dz * v_baro
             ds_save['MHT_overturning_z_baro_theta'] = Meridional_Tracer_Transport_Overturning(transport, heat_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "Joules/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "Joules/s",
                                                                                        long_name = "Meridional heat transport due to overturning circulation - Baroclinic v and Barotropic theta")
         
         # ------------------------------------------------- #
@@ -572,22 +576,22 @@ for r in range(0,1):
 
         with xr.set_options(keep_attrs=True):
             
-            salt_content_sigma =  - (so_sigma - tracer_baro['so']) / S_ref
+            salt_content_sigma =  - (so_sigma - tracer_baro['so'] * Thickness_sigma) / S_ref # so_sigma = so x h
             transport = Meridional_Transport_sigma - Thickness_sigma * v_baro
             ds_save['MFT_overturning_sigma'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_sigma,
-                                                                           dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                           dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "m^3/s",
                                                                            long_name = "Meridional freshwater transport due to overturning circulation - Baroclinic v and Baroclinic salt")
 
-            salt_content_sigma = - (so_sigma - tracer_baro['so']) / S_ref
+            salt_content_sigma = - (so_sigma - tracer_baro['so'] * Thickness_sigma) / S_ref
             transport = Thickness_sigma * v_baro
             ds_save['MFT_overturning_sigma_baro_v'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_sigma,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                                       dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "m^3/s",
                                                                                        long_name = "Meridional freshwater transport due to overturning circulation - Barotropic v and Baroclinic salt")
 
-            salt_content_sigma = - tracer_baro['so'] / S_ref
+            salt_content_sigma = - tracer_baro['so'] * Thickness_sigma / S_ref
             transport = Meridional_Transport_sigma - Thickness_sigma * v_baro
             ds_save['MFT_overturning_sigma_baro_so'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_sigma,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                                       dx = dx_v, dz = Thickness_sigma, dim_x = 'i', dimen = "m^3/s",
                                                                                        long_name = "Meridional freshwater transport due to overturning circulation - Baroclinic v and Barotropic salt")
             
         ds_save['MFT_z'] = - (Salt_Transport * dx_v).sum(dim='i')
@@ -599,22 +603,22 @@ for r in range(0,1):
         ds_save['MFT_z_baro'].attrs['long_name'] = "Meridional freshwater transport - Barotropic v and Barotropic salt"
 
         with xr.set_options(keep_attrs=True):
-            salt_content_z =  - (so_vel - tracer_baro['so']) / S_ref
+            salt_content_z =  - (so_vel - tracer_baro['so']) * cell_dz / S_ref
             transport = Meridional_Transport - cell_dz * v_baro
             ds_save['MFT_overturning_z'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "m^3/s",
                                                                                        long_name = "Meridional freshwater transport due to overturning circulation - Baroclinic v and Baroclinic salt")
 
-            salt_content_z =  - (so_vel - tracer_baro['so']) / S_ref
+            salt_content_z =  - (so_vel - tracer_baro['so']) * cell_dz / S_ref
             transport = cell_dz * v_baro
             ds_save['MFT_overturning_z_baro_v'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "m^3/s",
                                                                                        long_name = "Meridional freshwater transport due to overturning circulation - Barotropic v and Baroclinic salt")
 
-            salt_content_z =  - tracer_baro['so'] / S_ref
+            salt_content_z =  - tracer_baro['so'] * cell_dz / S_ref
             transport = Meridional_Transport - cell_dz * v_baro
             ds_save['MFT_overturning_z_baro_so'] = Meridional_Tracer_Transport_Overturning(transport, salt_content_z,
-                                                                                       dx = dx_v, dim_x = 'i', dimen = "m^3/s",
+                                                                                       dx = dx_v, dz = cell_dz, dim_x = 'i', dimen = "m^3/s",
                                                                                        long_name = "Meridional freshwater transport due to overturning circulation - Baroclinic v and Barotropic salt")
 
         # ------------------------------------------------------------------------------------------------ #

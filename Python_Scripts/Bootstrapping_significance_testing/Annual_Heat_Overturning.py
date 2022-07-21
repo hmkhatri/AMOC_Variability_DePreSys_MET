@@ -19,14 +19,14 @@ import scipy.stats as sc
 import warnings
 warnings.filterwarnings("ignore")
 
-from dask_mpi import initialize
-initialize()
+#from dask_mpi import initialize
+#initialize()
 
-from dask.distributed import Client
-client = Client()
+#from dask.distributed import Client
+#client = Client()
 
-os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
-os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
+#os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
+#os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
 
 ### ------ Functions for computations ----------
 

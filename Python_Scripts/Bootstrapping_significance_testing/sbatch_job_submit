@@ -1,10 +1,10 @@
 #!/bin/bash
 # SBATCH --partition=par-multi 
-#SBATCH --partition=par-single
+# SBATCH --partition=par-single
 # SBATCH --partition=test
-#SBATCH --ntasks=16
-# SBATCH --partition=high-mem
-# SBATCH --mem=256GB
+# SBATCH --ntasks=16
+#SBATCH --partition=high-mem
+#SBATCH --mem=256GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
@@ -21,5 +21,8 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Seasonal_Surface_Diag_NAO.py
 
-mpirun python Annual_Heat_Overturning.py
+# srun python Annual_Heat_Overturning.py
 
+# srun python Timeseries_SST_Heat_budget.py
+
+srun python Tracer_Depth_Lon.py

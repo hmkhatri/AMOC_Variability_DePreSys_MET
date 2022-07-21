@@ -42,17 +42,18 @@ for year in range(1961, 2016, 2):
 """
 
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_sigma/"
-save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Temp/" 
+#save_path = "/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Temp/" 
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Consolidated/Overturning_Heat_Salt_Transport_Baro_Decompose/"
 
 year1, year2 = (1960, 2017)
 
-for r in range(9, 10, 1):
+for r in range(0, 4, 1):
 
     ds1 = []
     
     for year in range(year1, year2):
         
-        d1 = xr.open_dataset(ppdir + "Overturning_Heat_Transport/Overturning_Heat_Transport_" + 
+        d1 = xr.open_dataset(ppdir + "Overturning_Heat_Salt_Transport/Overturning_Heat_Salt_Transport_" + 
                             str(year) + "_r" + str(r+1) + ".nc", chunks = {'time':1}, decode_times= False)
         
         d2 = xr.open_dataset(ppdir + "Overturning_Ekman/Overturning_Ekman_" + 
@@ -70,7 +71,7 @@ for r in range(9, 10, 1):
     
     ds1 = ds1.astype(np.float32).compute()
     
-    save_file = save_path + "Overturning_Heat_Transport_r" + str(r+1) + ".nc"
+    save_file = save_path + "Overturning_Heat_Salt_Transport_r" + str(r+1) + ".nc"
     
     ds1.to_netcdf(save_file)
     
