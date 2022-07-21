@@ -2,7 +2,7 @@
 Author: Hemant Khatri
 Email: hkhatri@liverpool.ac.uk
 
-This script computes model drift in overturning and meridional heat transport diagnostics.
+This script computes model drift in overturning and meridional heat/freshwater transport diagnostics.
 For this, method from Dune et al. (2016) is adopted. 
 
 """
@@ -50,7 +50,7 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/psi_sigma/"
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
-for r in range(9,10):
+for r in range(0,4):
     
     print("Var = Overturning diagnostics", "; Ensemble = ", r)
     
@@ -59,7 +59,7 @@ for r in range(9,10):
     # loop for reading files for all years
     for year in range(year1-10, year2, 1):
         
-        file_path = (data_dir + "Overturning_Heat_Transport/Overturning_Heat_Transport_" + 
+        file_path = (data_dir + "Overturning_Heat_Salt_Transport/Overturning_Heat_Salt_Transport_" + 
                      str(year) +"_r" + str(r+1) + ".nc")
         
         d1 = xr.open_dataset(file_path, chunks={'time':1}, decode_times=False, engine='netcdf4')
@@ -73,10 +73,16 @@ for r in range(9,10):
         
         ds.append(d)
     
-    # combine data for hindcasts
+    # Combine data for hindcasts
     ds = xr.concat(ds, dim='start_year')
     
     print("Data read complete")
+    
+    # Compute Overturning max
+    ds['Overturning_max_z'] = (ds['Overturning_z'] - ds['Overturning_z_barotropic']).max(dim='lev')
+    
+    ds['Overturning_max_sigma'] = (ds['Overturning_sigma'] - 
+                                   ds['Overturning_sigma_barotropic']).max(dim='sigma0')
     
     # loop over lead year and compute mean values
     for lead_year in range(0,11):
