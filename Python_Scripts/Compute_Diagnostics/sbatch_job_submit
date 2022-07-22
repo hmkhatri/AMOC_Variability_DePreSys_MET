@@ -25,7 +25,7 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # mpirun python Overturning_sigma_z.py
 
-srun python Overturning_Meridional_Heat_sigma_z.py 
+# srun python Overturning_Meridional_Heat_sigma_z.py 
 
 # srun python Heat_Budget.py
 
@@ -41,7 +41,7 @@ srun python Overturning_Meridional_Heat_sigma_z.py
 
 # srun python Composite_Diagnostics_NAO_phases.py
 
-# srun python Composite_Overturning_NAO_extremes.py
+srun python Composite_Overturning_NAO_extremes.py
 
 # srun python Correlation_NAO_ocean_var.py
 

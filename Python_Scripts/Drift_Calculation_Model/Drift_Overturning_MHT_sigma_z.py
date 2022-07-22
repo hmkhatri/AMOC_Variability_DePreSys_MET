@@ -50,7 +50,7 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/psi_sigma/"
 
 year1, year2 = (1979, 2017) # range over to compute average using DCPP 2016 paper
 
-for r in range(0,4):
+for r in range(4,10):
     
     print("Var = Overturning diagnostics", "; Ensemble = ", r)
     

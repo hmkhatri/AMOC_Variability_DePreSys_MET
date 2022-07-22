@@ -32,7 +32,7 @@ def select_subset(dataset):
 def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
     
     """Compute annual mean of data for bootstrapping
-    Means are computed for year = -1, 0, 1, 2-3, 4-5
+    Means are computed for year = -1, 0, 1, 2, 3-4, 5-6
     Parameters
     ----------
     ds : xarray Dataset for data variables
@@ -52,9 +52,9 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
         data_var1 = []
         
         ind_correct = 0
-        for i in range(0,5):
+        for i in range(0,6):
 
-            if (i<=2):
+            if (i<=3):
                 days = num_days.dt.days_in_month.isel(time = slice(12*i + 2, 12*i + 2 + 12))
                 data_var = ds[var1].isel(time = slice(12*i + 2, 12*i + 2 + 12))
             else:
@@ -113,7 +113,7 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_C
 
 var_list = ['thetao', 'Heat_Budget_new']
 
-case_list = ['NAOp'] #, 'NAOn']
+case_list = ['NAOp', 'NAOn']
 cf_lev = 0.8 # confidence level
 num_sample = 1000 # bootstrap samples to create
 
@@ -135,14 +135,17 @@ for case in case_list:
      
         if(var == 'Heat_Budget_new'):
             d = xr.open_dataset(ppdir + "Composite_" + case + "_" + var + ".nc", chunks={'time':101, 'j':107})
-            ds.append(d['Heat_Content_1300'].drop(['latitude', 'longitude']))
+            d['Heat_Content_1300_full'] = d['Heat_Content'] - d['Heat_Content_1300']
+            ds.append(d.get(['Heat_Content_1300', 'Heat_Content_1300_full']).drop(['latitude', 'longitude']))
         else:
-            d = xr.open_dataset(ppdir + "Composite_" + case + "_" + var + "_Depth_Lon.nc", chunks={'time':101, 'j':107})
-            ds.append(d)
+            d = xr.open_dataset(ppdir + "Composite_" + case + "_" + var + "_Depth_Lon.nc", chunks={'time':101})
+            ds.append(d.rename({'i': 'im'})) # this is because the datafiles are of not same size in 'i'
         
     ds = xr.merge(ds)
     
-    var_name = ['thetao', 'Heat_Content_1300']
+    ds = ds - ds.isel(time=0) # to remove time=0 signal for better interpretation
+    
+    var_name = ['thetao', 'Heat_Content_1300', 'Heat_Content_1300_full']
     ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
     
     ds_save = xr.Dataset()
@@ -155,10 +158,10 @@ for case in case_list:
         cfd_up_var = []
         cfd_low_var = []
         
-        if(var == 'Heat_Content_1300'):
-            dim_list = ['j', 'i']
+        if(var == 'thetao'):
+            dim_list = ['lev', 'im']
         else:
-            dim_list = ['lev', 'i']
+            dim_list = ['j', 'i']
         
         for yr in range(0, len(ds_annual['year'])):
             

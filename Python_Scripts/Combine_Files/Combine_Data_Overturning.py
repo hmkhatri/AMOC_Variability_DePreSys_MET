@@ -47,7 +47,7 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Consolidated/Overturning_Heat
 
 year1, year2 = (1960, 2017)
 
-for r in range(0, 4, 1):
+for r in range(4, 10, 1):
 
     ds1 = []
     

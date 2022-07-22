@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore')
 
 ### ------ Main calculations ------------------
 
-data_dir =  "/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Temp/"
+data_dir =  "/gws/nopw/j04/snapdragon/hkhatri/Data_Consolidated/Overturning_Heat_Salt_Transport_Baro_Decompose/"
 
 data_drift_dir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Drift/"
 
@@ -99,14 +99,18 @@ for tim_ind in range(4,13,4):
             
             if(count_NAO.isel(r=r).sel(start_year=year) == 1):
                 
-                ds1 = d.sel(start_year=year).drop(['start_year']) - ds_drift.isel(r=r)
+                ds1 = d.sel(start_year=year).drop(['start_year']) - ds_drift.isel(r=r).drop(['Overturning_max_z', 'Overturning_max_sigma'])
                 
-                # compute anomalye in overturning maximum
+                # compute anomaly in overturning maximum
                 ds1['Overturning_max_z'] = ((d['Overturning_z'].sel(start_year=year).drop(['start_year'])).max(dim='lev') - 
-                                            (ds_drift['Overturning_z'].isel(r=r)).max(dim='lev'))
+                                            (ds_drift['Overturning_max_z'].isel(r=r)))
                 
                 ds1['Overturning_max_sigma'] = ((d['Overturning_sigma'].sel(start_year=year).drop(['start_year'])).max(dim='sigma0') -
-                                                (ds_drift['Overturning_sigma'].isel(r=r)).max(dim='sigma0'))
+                                                (ds_drift['Overturning_max_sigma'].isel(r=r)))
+                
+                # to get mean densities and layer thicknesses
+                ds1['Depth_sigma'] = d['Depth_sigma'].sel(start_year=year).drop(['start_year'])
+                ds1['Density_z'] = d['Density_z'].sel(start_year=year).drop(['start_year'])
                 
                 ds.append(ds1.isel(time = slice((int(tim_ind/4)-1)*12, (int(tim_ind/4) + 7)*12 + 5)))
 
