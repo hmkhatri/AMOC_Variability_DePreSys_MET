@@ -29,4 +29,12 @@
 | [Composite_Overturning_NAO_extremes.py](./Compute_Diagnostics/Composite_Overturning_NAO_extremes.py) | To save composites of overturning-related diagnostics for selected members based on NAO extreme values |
 | [Composite_Heat_Budget_NAO_extreme.py](./Compute_Diagnostics/Composite_Heat_Budget_NAO_extreme.py) | To save composites of heat budget diagnostics for selected members based on NAO extreme values |
 | | |
+| [Seasonal_Surface_Diag_NAO.py](./Bootstrapping_significance_testing/Seasonal_Surface_Diag_NAO.py) | To compute bootstrap confidence intervals for seasonal-mean ocean surface diagnostics corresponding to NAO extremes |
+| [Annual_Heat_Overturning.py](./Bootstrapping_significance_testing/Annual_Heat_Overturning.py) | To compute boot
+strap confidence intervals for annual-mean diagnostics (spatial pattern) |
+| [Tracer_Depth_Lon.py](./Bootstrapping_significance_testing/Tracer_Depth_Lon.py) | To compute boot
+strap confidence intervals for annual-mean diagnostics (depth-lon structure) |
+| [Timeseries_SST_Heat_budget.py](./Bootstrapping_significance_testing/Timeseries_SST_Heat_budget.py) | To compute boot strap confidence intervals for area-integrated diagnostics (timeseries) |
+| [Timeseries_Overturning_MHT.py](./Bootstrapping_significance_testing/Timeseries_Overturning_MHT.py) | To compute boot strap confidence intervals for overturning diagnostics (timeseries) |
+| | |
 | [sbatch_job_submit](./sbatch_job_submit) | To submit python jobs on slurm cluster | 
