@@ -105,10 +105,10 @@ for case in case_list:
                            ds_drift.isel(r=r).drop(['Overturning_max_z', 'Overturning_max_sigma']))
 
                     # compute anomaly in overturning maximum
-                    ds1['Overturning_max_z'] = ((d['Overturning_z'].sel(start_year=year).drop(['start_year'])).max(dim='lev') - 
+                    ds1['Overturning_max_z'] = (((d['Overturning_z'] - d['Overturning_z_barotropic']).sel(start_year=year).drop(['start_year'])).max(dim='lev') - 
                                                 (ds_drift['Overturning_max_z'].isel(r=r)))
 
-                    ds1['Overturning_max_sigma'] = ((d['Overturning_sigma'].sel(start_year=year).drop(['start_year'])).max(dim='sigma0') -
+                    ds1['Overturning_max_sigma'] = (((d['Overturning_sigma'] - d['Overturning_sigma_barotropic']).sel(start_year=year).drop(['start_year'])).max(dim='sigma0') -
                                                     (ds_drift['Overturning_max_sigma'].isel(r=r)))
 
                     # to get mean densities and layer thicknesses

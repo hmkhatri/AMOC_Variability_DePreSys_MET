@@ -128,8 +128,8 @@ def data_bootstrap_xskill(data, dim_iter = 'time', num_sample = 1000):
 ### ------------- Main computations ------------
 
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
-#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
-save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
+#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
 
 #var_list = ['tos', 'hfds', 'Heat_Budget_new'] #, 'Overturning']
 #var_list = ['Heat_Budget_new']
@@ -184,10 +184,13 @@ for case in case_list:
         ds_save = xr.Dataset()
         
         if(var == 'Overturning_MHT'):
+            
             ds_save['Depth_sigma'] = ds_annual['Depth_sigma'].mean('comp')
             ds_save['Density_z'] = ds_annual['Density_z'].mean('comp')
+            
+            ds_save['latitude'] = ds['latitude']
+            
             var_name = ['Overturning_z', 'Overturning_sigma']
-        
         
         # -------- Using scipy library -------------------
         for var1 in var_name:
@@ -224,8 +227,8 @@ for case in case_list:
             ds_save[var1 + '_confidence_lower'] = xr.concat(cfd_low_var1, dim='year') 
             ds_save[var1 + '_confidence_upper'] = xr.concat(cfd_up_var1, dim='year')
             
-        if(var == 'Overturning'):
-            ds_save['latitude'] = ds['latitude']
+        #if(var == 'Overturning_MHT'):
+        #    ds_save['latitude'] = ds['latitude']
             
         save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_annual.nc")
         ds_save = ds_save.astype(np.float32).compute()
