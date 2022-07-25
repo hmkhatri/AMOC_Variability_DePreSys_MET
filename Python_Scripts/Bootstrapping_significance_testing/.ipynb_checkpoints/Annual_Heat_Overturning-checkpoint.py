@@ -19,14 +19,14 @@ import scipy.stats as sc
 import warnings
 warnings.filterwarnings("ignore")
 
-from dask_mpi import initialize
-initialize()
+#from dask_mpi import initialize
+#initialize()
 
-from dask.distributed import Client
-client = Client()
+#from dask.distributed import Client
+#client = Client()
 
-os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
-os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
+#os.environ["MALLOC_MMAP_MAX_"]=str(40960) # to reduce memory clutter. This is temparory, no permanent solution yet.
+#os.environ["MALLOC_MMAP_THRESHOLD_"]=str(16384)
 
 ### ------ Functions for computations ----------
 
@@ -128,16 +128,16 @@ def data_bootstrap_xskill(data, dim_iter = 'time', num_sample = 1000):
 ### ------------- Main computations ------------
 
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
-#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
-save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
+#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
 
-var_list = ['tos', 'hfds', 'Heat_Budget_new'] #, 'Overturning']
+#var_list = ['tos', 'hfds', 'Heat_Budget_new'] #, 'Overturning']
 #var_list = ['Heat_Budget_new']
-#var_list = ['Overturning']
+var_list = ['Overturning_MHT']
 
 case_list = ['NAOp', 'NAOn']
 cf_lev = 0.9 # confidence level
-num_sample = 5000 # bootstrap samples to create
+num_sample = 1000 # bootstrap samples to create
 
 # get days in month from actual time values
 ds_NAO = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Anomaly_Compute/NAO/NAO_SLP_Anomaly_new.nc")
@@ -170,38 +170,29 @@ for case in case_list:
             var_name = [var]
             ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'integrate')
         
-        elif(var == 'Overturning'):
-            var_name = ['Overturning_z', 'Overturning_sigma'] #, 'MHT_sigma', 'MHT_z']
-            ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
+        elif(var == 'Overturning_MHT'):
+            ds1 = xr.Dataset()
+            ds1['Overturning_z'] = ds['Overturning_z'] - ds['Overturning_z_barotropic']
+            ds1['Overturning_sigma'] = ds['Overturning_sigma'] - ds['Overturning_sigma_barotropic']
+            ds1['Depth_sigma'] = ds['Depth_sigma']
+            ds1['Density_z'] = ds['Density_z']
+    
+            var_name = ['Overturning_z', 'Overturning_sigma', 'Depth_sigma', 'Density_z']
+            ds_annual = annaul_mean_data(ds1, var_name, tim1, method = 'mean')
         
         # compute bootstrap confidece intervals
         ds_save = xr.Dataset()
         
-        # -------- Using xskillscore library -------------------
-        for var1 in var_name:
+        if(var == 'Overturning_MHT'):
             
-            ds_save[var1] = ds_annual[var1].mean('comp')
+            ds_save['Depth_sigma'] = ds_annual['Depth_sigma'].mean('comp')
+            ds_save['Density_z'] = ds_annual['Density_z'].mean('comp')
             
-            se = data_bootstrap_xskill(ds_annual[var1].compute(), dim_iter = 'comp', num_sample = num_sample)
-            
-            ds_save[var1 + '_standard_error'] = se
-            
-        if(var == 'Overturning'):
             ds_save['latitude'] = ds['latitude']
             
-        save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_annual.nc")
-        ds_save = ds_save.astype(np.float32).compute()
-        ds_save.to_netcdf(save_file_path)
-
-        print("Data saved succefully")
-
-        ds_save.close()
-        ds_annual.close()
-        ds.close()
-        
+            var_name = ['Overturning_z', 'Overturning_sigma']
         
         # -------- Using scipy library -------------------
-        """
         for var1 in var_name:
             
             sde_var1 = []
@@ -209,13 +200,13 @@ for case in case_list:
             cfd_low_var1 = []
             
             if((var1 == 'Overturning_sigma') or (var1 == 'MHT_sigma')):
-                dim_list = ['j_c', 'sigma0']
+                dim_list = ['sigma0', 'j_c']
             elif((var1 == 'Overturning_z') or (var1 == 'MHT_z')):
                 dim_list = ['lev', 'j_c']
             else:
                 dim_list = ['j', 'i']
                 
-            print(dim_list)
+            #print(dim_list)
             
             for yr in range(0, len(ds_annual['year'])):
                 
@@ -236,6 +227,30 @@ for case in case_list:
             ds_save[var1 + '_confidence_lower'] = xr.concat(cfd_low_var1, dim='year') 
             ds_save[var1 + '_confidence_upper'] = xr.concat(cfd_up_var1, dim='year')
             
+        #if(var == 'Overturning_MHT'):
+        #    ds_save['latitude'] = ds['latitude']
+            
+        save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_annual.nc")
+        ds_save = ds_save.astype(np.float32).compute()
+        ds_save.to_netcdf(save_file_path)
+
+        print("Data saved succefully")
+
+        ds_save.close()
+        ds_annual.close()
+        ds.close()
+        
+        
+        """
+        # -------- Using xskillscore library (not working properly - too slow)-------------------
+        for var1 in var_name:
+            
+            ds_save[var1] = ds_annual[var1].mean('comp')
+            
+            se = data_bootstrap_xskill(ds_annual[var1].compute(), dim_iter = 'comp', num_sample = num_sample)
+            
+            ds_save[var1 + '_standard_error'] = se
+            
         if(var == 'Overturning'):
             ds_save['latitude'] = ds['latitude']
             
@@ -248,6 +263,5 @@ for case in case_list:
         ds_save.close()
         ds_annual.close()
         ds.close()
-        
         """
             
