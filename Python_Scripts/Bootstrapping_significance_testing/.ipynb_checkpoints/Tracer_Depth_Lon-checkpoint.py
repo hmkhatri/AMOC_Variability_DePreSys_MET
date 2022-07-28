@@ -32,7 +32,7 @@ def select_subset(dataset):
 def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
     
     """Compute annual mean of data for bootstrapping
-    Means are computed for year = -1, 0, 1, 2, 3-4, 5-6
+    Means are computed for year = -1, 0, 1, 2, 3, 4
     Parameters
     ----------
     ds : xarray Dataset for data variables
@@ -54,7 +54,7 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
         ind_correct = 0
         for i in range(0,6):
 
-            if (i<=3):
+            if (i<=6):
                 days = num_days.dt.days_in_month.isel(time = slice(12*i + 2, 12*i + 2 + 12))
                 data_var = ds[var1].isel(time = slice(12*i + 2, 12*i + 2 + 12))
             else:
@@ -143,7 +143,7 @@ for case in case_list:
         
     ds = xr.merge(ds)
     
-    ds = ds - ds.isel(time=0) # to remove time=0 signal for better interpretation
+    # ds = ds - ds.isel(time=0) # to remove time=0 signal for better interpretation
     
     var_name = ['thetao', 'Heat_Content_1300', 'Heat_Content_1300_full']
     ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
