@@ -35,13 +35,13 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Composite_3D_NAO_phase.py
 
-# srun python Composite_Heat_Budget_NAO_extreme.py  
+srun python Composite_Heat_Budget_NAO_extreme.py  
 
 # srun python Anomaly_SLP_NAO_compute.py
 
 # srun python Composite_Diagnostics_NAO_phases.py
 
-srun python Composite_Overturning_NAO_extremes.py
+# srun python Composite_Overturning_NAO_extremes.py
 
 # srun python Correlation_NAO_ocean_var.py
 
