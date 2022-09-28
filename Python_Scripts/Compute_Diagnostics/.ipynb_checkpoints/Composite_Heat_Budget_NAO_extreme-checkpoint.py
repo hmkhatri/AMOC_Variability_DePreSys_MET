@@ -143,6 +143,17 @@ print("Total cases = ", len(ds['comp']), " - case ", case)
 comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32)
 
 ds_save = xr.Dataset()
+
+ds_save['Heat_Divergence_200'] = (comp_save['Heat_Divergence_Horizontal_200'] +
+                                  comp_save['Heat_Divergence_Vertical_200'])
+ds_save['Heat_Divergence_200'].attrs['units'] = "Watt/m^2"
+ds_save['Heat_Divergence_200'].attrs['long_name'] = "Div(u.theta) integrated between 0 and 210.18 m"
+
+ds_save['Heat_Content_200'] = comp_save['Heat_Content_200']
+ds_save['Heat_Content_200'].attrs['units'] = "Joules/m^2"
+ds_save['Heat_Content_200'].attrs['long_name'] = "Heat Content integrated between 0 and 210.18 m"
+
+
 ds_save['Heat_Divergence'] = (comp_save['Heat_Divergence_Horizontal_200'] +
                               comp_save['Heat_Divergence_Horizontal_1300'] +
                               comp_save['Heat_Divergence_Vertical_200'] +
@@ -161,7 +172,7 @@ ds_save['Heat_Content'].attrs['units'] = "Joules/m^2"
 ds_save['Heat_Content'].attrs['long_name'] = "Heat Content integrated over full depth"
 
 ds_save = ds_save.compute()
-save_file = save_path + "Composite_" + case + "_Heat_Budget_new.nc"
+save_file = save_path + "Composite_" + case + "_Heat_Budget.nc"
 ds_save.to_netcdf(save_file)
     
 print("Data saved successfully")  

@@ -117,9 +117,9 @@ ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
 tim1 = ds_NAO['time_val'].isel(start_year=0,time=slice(0,101)).drop('start_year')
 tim1 = tim1.astype("datetime64[ns]")
 
-name_list = ['tos', 'hfds', 'mlotst', 'Heat_Budget_new']
+name_list = ['tos', 'hfds', 'mlotst', 'Heat_Budget']
 
-var_list = ['tos', 'hfds', 'mlotst', 'Heat_Divergence', 'Heat_Content_1300']
+var_list = ['tos', 'hfds', 'mlotst', 'Heat_Divergence', 'Heat_Content_1300', 'Heat_Divergence_200', 'Heat_Content_200']
 
 case_list = ['NAOp', 'NAOn']
 
@@ -165,7 +165,7 @@ for case in case_list:
         else:
             data = (ds[var1] * dA_NA).sum(['i', 'j']) 
         
-        if(var1 == 'Heat_Content_1300'):
+        if((var1 == 'Heat_Content_1300') or (var1 == 'Heat_Content_200')):
             ds_mean[var1] = Data_time_tendency(data, tim1, win_month)
         else:
             ds_mean[var1] = Moving_mean(data, tim1, win_month)
