@@ -4,7 +4,7 @@
 # SBATCH --partition=test
 # SBATCH --ntasks=16
 #SBATCH --partition=high-mem
-#SBATCH --mem=256GB
+#SBATCH --mem=128GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
@@ -23,7 +23,9 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Annual_Heat_Overturning.py
 
-srun python Timeseries_SST_Heat_budget.py
+srun python Atmos_6month_timeseries.py
+
+# srun python Timeseries_SST_Heat_budget.py
 
 # srun python Tracer_Depth_Lon.py
 
