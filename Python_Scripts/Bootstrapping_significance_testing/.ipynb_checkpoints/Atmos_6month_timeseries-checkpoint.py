@@ -43,14 +43,17 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
         
         data_var1 = []
         
+        data_ref = ds[var1].isel(time = slice(0, 6))
+        days = num_days.dt.days_in_month.isel(time = slice(0, 6))
+        data_ref = ((data_ref * days).sum('time')/ days.sum('time'))
+        
         for i in range(0,16): # len(time) = 101 months, so we have 16 6-month invervals
-
 
             days = num_days.dt.days_in_month.isel(time = slice(6*i, 6*i + 6))
             data_var = ds[var1].isel(time = slice(6*i, 6*i + 6))
             
             if(method == 'mean'):
-                data_var = ((data_var * days).sum('time')/ days.sum('time'))
+                data_var = ((data_var * days).sum('time')/ days.sum('time')) - data_ref # remove first 6-month for better ref.
             elif(method == 'integrate'):
                 data_var = ((data_var * days).sum('time') * 3600. * 24.)
             elif(method == 'difference'):
@@ -116,6 +119,8 @@ for case in case_list:
     for var in var_list:
         
         ds = xr.open_dataset(ppdir + "Composite_" + case + "_" + var + ".nc", chunks={'time':101})
+        
+        #ds = ds - ds.isel(time=0) # to remove time=0 signal for better interpretation
         
         var_name = [var]
         

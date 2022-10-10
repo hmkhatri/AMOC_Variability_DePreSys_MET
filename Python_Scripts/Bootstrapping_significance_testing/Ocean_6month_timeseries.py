@@ -6,7 +6,7 @@ This script can be used to compute standard error and confidence intervals using
 For this, scipy.stats.bootstrap function is used.
 The output is saved in a netcdf file that contains confidence intervals and standard error.
 
-This script is computes confidence intervals for 6-month averaged anomlies in atmospheric diagnostics. 
+This script is computes confidence intervals for 6-month averaged anomlies in oceanic diagnostics. 
 Timeseries of anomalies in NDJFMA and MJJASO months are evaluated for confidence intervals.
 
 """
@@ -48,6 +48,7 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
         data_ref = ((data_ref * days).sum('time')/ days.sum('time'))
         
         for i in range(0,16): # len(time) = 101 months, so we have 16 6-month invervals
+
 
             days = num_days.dt.days_in_month.isel(time = slice(6*i, 6*i + 6))
             data_var = ds[var1].isel(time = slice(6*i, 6*i + 6))
@@ -99,7 +100,7 @@ def data_bootstrap(data, cf_lev = 0.95, num_sample = 1000):
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
 
-var_list = ['tas', 'pr', 'psl', 'clt']
+var_list = ['tos', 'hfds']
 
 case_list = ['NAOp', 'NAOn']
 cf_lev = 0.8 # confidence level
@@ -133,7 +134,7 @@ for case in case_list:
         sde_var1 = []
         cfd_up_var1 = []
         cfd_low_var1 = []
-        dim_list = ['lat', 'lon']
+        dim_list = ['j', 'i']
         
         for yr in range(0, len(ds_annual['year'])):
             
