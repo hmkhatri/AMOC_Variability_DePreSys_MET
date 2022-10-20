@@ -66,7 +66,7 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
             data_var = ds[var1].isel(time = slice(12*i, 12*i + 12))        
             
             if(method == 'mean'):
-                data_var = ((data_var * days).sum('time')/ days.sum('time')) - data_ref # remove member time-mean for better ref.
+                data_var = ((data_var * days).sum('time')/ days.sum('time')) # - data_ref # remove member time-mean for better ref.
             elif(method == 'integrate'):
                 data_var = ((data_var * days).sum('time') * 3600. * 24.)
             elif(method == 'difference'):
@@ -111,7 +111,8 @@ def data_bootstrap(data, cf_lev = 0.95, num_sample = 1000):
 ### ------------- Main computations ------------
 
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
-save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/Atmos_feedback/"
+#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/Atmos_feedback/"
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
 
 var_list = ['tas', 'pr', 'psl', 'clt']
 
