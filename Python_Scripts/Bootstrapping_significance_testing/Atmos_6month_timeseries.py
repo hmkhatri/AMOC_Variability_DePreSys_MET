@@ -43,6 +43,8 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
         
         data_var1 = []
         
+        """ # 6-month mean code
+        
         data_ref = ds[var1].isel(time = slice(0, 6))
         days = num_days.dt.days_in_month.isel(time = slice(0, 6))
         data_ref = ((data_ref * days).sum('time')/ days.sum('time'))
@@ -51,9 +53,20 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
 
             days = num_days.dt.days_in_month.isel(time = slice(6*i, 6*i + 6))
             data_var = ds[var1].isel(time = slice(6*i, 6*i + 6))
+        """
+        
+        # annual-mean code 
+        data_ref = ds[var1]
+        days = num_days.dt.days_in_month
+        data_ref = ((data_ref * days).sum('time')/ days.sum('time'))
+        
+        for i in range(0,8): # len(time) = 101 months, so we have 8 12-month invervals
+
+            days = num_days.dt.days_in_month.isel(time = slice(12*i, 12*i + 12))
+            data_var = ds[var1].isel(time = slice(12*i, 12*i + 12))        
             
             if(method == 'mean'):
-                data_var = ((data_var * days).sum('time')/ days.sum('time')) - data_ref # remove first 6-month for better ref.
+                data_var = ((data_var * days).sum('time')/ days.sum('time')) # - data_ref # remove member time-mean for better ref.
             elif(method == 'integrate'):
                 data_var = ((data_var * days).sum('time') * 3600. * 24.)
             elif(method == 'difference'):
@@ -61,7 +74,8 @@ def annaul_mean_data(ds, var_name, num_days, method = 'mean'):
             else:
                 print("Method is not valid")
             
-            data_var1.append(data_var)
+            data_var1.append(data_var) 
+        
             
         ds_annual[var1] = xr.concat(data_var1, dim='year')
     
@@ -97,7 +111,8 @@ def data_bootstrap(data, cf_lev = 0.95, num_sample = 1000):
 ### ------------- Main computations ------------
 
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
-save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
+#save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/Atmos_feedback/"
+save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_xskillscore/"
 
 var_list = ['tas', 'pr', 'psl', 'clt']
 
@@ -119,8 +134,6 @@ for case in case_list:
     for var in var_list:
         
         ds = xr.open_dataset(ppdir + "Composite_" + case + "_" + var + ".nc", chunks={'time':101})
-        
-        #ds = ds - ds.isel(time=0) # to remove time=0 signal for better interpretation
         
         var_name = [var]
         
@@ -156,10 +169,15 @@ for case in case_list:
         ds_save[var + '_confidence_upper'] = xr.concat(cfd_up_var1, dim='year')
         
         # save data
-        ds_save = ds_save.assign(year = np.arange(-1, 7, 0.5))
-        ds_save['year'].attrs['long_name'] = "6-month means - NDJFMA, MJJASO, .."
         
-        save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_6month.nc")
+        #ds_save = ds_save.assign(year = np.arange(-1, 7, 0.5))
+        #ds_save['year'].attrs['long_name'] = "6-month means - NDJFMA, MJJASO, .."
+        #save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_6month.nc")
+        
+        ds_save = ds_save.assign(year = np.arange(-1, 7, 1.))
+        ds_save['year'].attrs['long_name'] = "annual means - NDJFMAMJJASO"
+        save_file_path = (save_path + "Bootstrap_"+ case + "_" + var + "_12month.nc")
+        
         ds_save = ds_save.astype(np.float32).compute()
         ds_save.to_netcdf(save_file_path)
 
