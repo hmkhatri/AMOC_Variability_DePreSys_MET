@@ -4,7 +4,7 @@
 # SBATCH --partition=test
 # SBATCH --ntasks=32
 #SBATCH --partition=high-mem
-#SBATCH --mem=128GB
+#SBATCH --mem=256GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
@@ -35,7 +35,9 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Composite_3D_NAO_phase.py
 
-srun python Composite_Heat_Budget_NAO_extreme.py  
+# srun python Composite_Heat_Budget_NAO_extreme.py  
+
+srun python Composite_Gyre_Transport_NAO_phases.py
 
 # srun python Anomaly_SLP_NAO_compute.py
 
