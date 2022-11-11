@@ -37,11 +37,11 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Composite_Heat_Budget_NAO_extreme.py  
 
-srun python Composite_Gyre_Transport_NAO_phases.py
+# srun python Composite_Gyre_Transport_NAO_phases.py
 
 # srun python Anomaly_SLP_NAO_compute.py
 
-# srun python Composite_Diagnostics_NAO_phases.py
+srun python Composite_Diagnostics_NAO_phases.py
 
 # srun python Composite_Overturning_NAO_extremes.py
 

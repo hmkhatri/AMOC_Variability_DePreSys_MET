@@ -133,7 +133,8 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_C
 
 #var_list = ['tos', 'hfds', 'Heat_Budget_new'] #, 'Overturning']
 #var_list = ['Heat_Budget_new']
-var_list = ['Overturning_MHT']
+#var_list = ['Overturning_MHT']
+var_list = ['Gyre']
 
 case_list = ['NAOp', 'NAOn']
 cf_lev = 0.9 # confidence level
@@ -164,6 +165,10 @@ for case in case_list:
             
         elif(var == 'tos'):
             var_name = [var]
+            ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
+
+        elif(var == 'Gyre'):
+            var_name = ['Psi_Gyre']
             ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
             
         elif(var == 'hfds'):

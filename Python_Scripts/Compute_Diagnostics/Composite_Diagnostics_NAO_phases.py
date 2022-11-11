@@ -54,7 +54,7 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-var_list = ['so'] #['thetao', 'mlotst', 'tos', 'sos', 'hfds'] # ocean vars
+var_list = ['sos'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
 #var_list = ['psl'] #,'tas', 'clt', 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
@@ -143,11 +143,11 @@ for var in var_list:
     print("Total cases = ", len(ds['comp']), " - case ", case)
     
     # if ocean vars
-    #comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
+    comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
     
     # if 3D ocean vars to save vertical sections
     #ds = ds.chunk({'lev':5})
-    comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).mean('comp').compute()
+    #comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).mean('comp').compute()
     
     # if atmos. vars
     #comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()

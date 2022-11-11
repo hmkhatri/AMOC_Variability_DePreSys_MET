@@ -72,8 +72,8 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 for var in var_list:
     
