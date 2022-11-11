@@ -46,9 +46,9 @@ def data_bootstrap(data, cf_lev = 0.95, num_sample = 1000):
 ppdir = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_Confidence/"
 
-var_list = ['mlotst', 'tos', 'hfds', 'tauu']
+var_list = ['sos'] #['mlotst', 'tos', 'hfds', 'tauu']
 
-case_list = ['NAOp', 'NAOn']
+case_list = ['NAOp'] #, 'NAOn']
 tim_ind = 4 
 
 # get days in month from actual time values

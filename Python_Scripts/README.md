@@ -28,6 +28,7 @@
 | [Composite_Diagnostics_NAO_phases.py](./Compute_Diagnostics/Composite_Diagnostics_NAO_phases.py) | To save composites of ocean/atmosphere vars for selected members based on NAO extreme values |
 | [Composite_Overturning_NAO_extremes.py](./Compute_Diagnostics/Composite_Overturning_NAO_extremes.py) | To save composites of overturning-related diagnostics for selected members based on NAO extreme values |
 | [Composite_Heat_Budget_NAO_extreme.py](./Compute_Diagnostics/Composite_Heat_Budget_NAO_extreme.py) | To save composites of heat budget diagnostics for selected members based on NAO extreme values |
+| [Composite_Gyre_Transport_NAO_phases.py](./Compute_Diagnostics/Composite_Gyre_Transport_NAO_phases.py) | To save composites of gyre transport anomalies for selected members based on NAO extreme values |
 | | |
 | [Seasonal_Surface_Diag_NAO.py](./Bootstrapping_significance_testing/Seasonal_Surface_Diag_NAO.py) | To compute bootstrap confidence intervals for seasonal-mean ocean surface diagnostics corresponding to NAO extremes |
 | [Annual_Heat_Overturning.py](./Bootstrapping_significance_testing/Annual_Heat_Overturning.py) | To compute boot strap confidence intervals for annual-mean diagnostics (spatial pattern) |
