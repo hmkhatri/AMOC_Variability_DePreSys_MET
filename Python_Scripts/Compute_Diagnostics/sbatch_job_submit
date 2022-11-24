@@ -4,7 +4,7 @@
 # SBATCH --partition=test
 # SBATCH --ntasks=32
 #SBATCH --partition=high-mem
-#SBATCH --mem=128GB
+#SBATCH --mem=64GB
 # SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 

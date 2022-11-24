@@ -3,9 +3,9 @@
 # SBATCH --partition=par-single
 # SBATCH --partition=test
 # SBATCH --ntasks=16
-#SBATCH --partition=high-mem
-#SBATCH --mem=256GB
-# SBATCH --partition=short-serial
+# SBATCH --partition=high-mem
+# SBATCH --mem=256GB
+#SBATCH --partition=short-serial
 # SBATCH --partition=short-serial-4hr
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
@@ -19,7 +19,9 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # Execute python script
 
-srun python Seasonal_Surface_Diag_NAO.py
+# srun python Seasonal_Surface_Diag_NAO.py
+
+srun python Timeseries_Gyre_MHT.py
 
 # srun python Annual_Heat_Overturning.py
 

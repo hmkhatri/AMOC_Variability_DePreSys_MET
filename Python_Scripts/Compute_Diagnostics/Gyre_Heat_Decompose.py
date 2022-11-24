@@ -144,7 +144,7 @@ def Meridional_Tracer_Transport_Gyre(Transport, Field, grid, const_multi = 1., d
     Meridional_Tracer_Transport : xarray DataArray - meridional tracer transport due to overturning circulation
     """
 
-    Field_vel = Field * const_multi
+    Field_vel = Field * const_multi # correct once the code is finsihed running
 
     Transport_Meridional = (Transport -
                             (Transport * dx).sum(dim=dim_x) / ((dx * dz / dz).sum(dim=dim_x) + 1.e-10)) # transport anomaly from zonal-mean
@@ -175,8 +175,8 @@ ds_grid = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/
 ds_mask = xr.open_dataset("/home/users/hkhatri/DePreSys4_Data/Data_Consolidated/Mask_UV_grid.nc")
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
-case = 'NAOp' 
-#case = 'NAOn'
+#case = 'NAOp' 
+case = 'NAOn'
 
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
 
@@ -322,7 +322,7 @@ cell_dz = cell_dz * (ds['vo'].isel(time=0, comp=0) / ds['vo'].isel(time=0, comp=
 
 dx_v = ds['dx_v'].where(ds_mask['mask_North_Atl_v'] == 0.).compute() # dx mask for North Atlantic
 
-for i in range(0, len(ds['comp'])):
+for i in range(56, 60):
 
     # Compute barotropic zonal-mean components of velocity and tracer fields
     [v_baro, tracer_baro] = compute_barotropic(ds_anom['vo'].isel(comp=i), ds_anom.get(['thetao', 'so']).isel(comp=i), grid, dim = 'Y', dz = cell_dz, 
