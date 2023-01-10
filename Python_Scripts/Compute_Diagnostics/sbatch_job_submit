@@ -10,7 +10,7 @@
 # SBATCH --account=short4hr 
 #SBATCH -o %j.out 
 #SBATCH -e %j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 
 # load python3 module
 # module add jaspy
@@ -27,7 +27,7 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Overturning_Meridional_Heat_sigma_z.py 
 
-srun python Gyre_Heat_Decompose.py
+# srun python Gyre_Heat_Decompose.py
 
 # srun python Heat_Budget.py
 
@@ -44,6 +44,8 @@ srun python Gyre_Heat_Decompose.py
 # srun python Anomaly_SLP_NAO_compute.py
 
 # srun python Composite_Diagnostics_NAO_phases.py
+
+srun python Composite_density_NAO_phases.py
 
 # srun python Composite_Overturning_NAO_extremes.py
 

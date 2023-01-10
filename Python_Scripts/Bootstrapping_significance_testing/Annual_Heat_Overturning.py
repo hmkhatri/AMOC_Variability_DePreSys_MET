@@ -134,7 +134,8 @@ save_path = "/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/Bootstrap_C
 #var_list = ['tos', 'hfds', 'Heat_Budget_new'] #, 'Overturning']
 #var_list = ['Heat_Budget_new']
 #var_list = ['Overturning_MHT']
-var_list = ['Gyre']
+#var_list = ['Gyre']
+var_list = ['sos', 'sigma0']
 
 case_list = ['NAOp', 'NAOn']
 cf_lev = 0.9 # confidence level
@@ -184,6 +185,10 @@ for case in case_list:
     
             var_name = ['Overturning_z', 'Overturning_sigma', 'Depth_sigma', 'Density_z']
             ds_annual = annaul_mean_data(ds1, var_name, tim1, method = 'mean')
+
+        else:
+            var_name = [var]
+            ds_annual = annaul_mean_data(ds, var_name, tim1, method = 'mean')
         
         # compute bootstrap confidece intervals
         ds_save = xr.Dataset()

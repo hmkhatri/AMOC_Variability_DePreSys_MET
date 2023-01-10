@@ -10,16 +10,16 @@
 import numpy as np
 import scipy as sc
 import xarray as xr
+import gsw as gsw
 from distributed import Client
-from dask import delayed
-from dask import compute
+#from dask import delayed
+#from dask import compute
 #from dask.diagnostics import ProgressBar
 
 import warnings
 warnings.filterwarnings('ignore')
 
 #from dask_mpi import initialize
-
 #initialize()
 #client = Client()
 
@@ -28,6 +28,12 @@ warnings.filterwarnings('ignore')
 #os.environ["MALLOC_TRIM_THRESHOLD_"]=str(0)
 
 ### ------ Functions for computations ----------
+
+def pdens(S,theta):
+
+    pot_dens = gsw.density.sigma0(S, theta)
+
+    return pot_dens
 
 def select_subset(dataset):
     
@@ -54,8 +60,7 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/"
 
 year1, year2 = (1960, 2017)
 
-var_list = ['sos'] #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
-#var_list = ['psl'] #,'tas', 'clt', 'tauu', 'pr', 'evspsbl'] #'tauu', 'tauv'] #atmosphere vars
+var = 'sigma0_surface' #['mlotst', 'tos', 'sos', 'hfds'] # ocean vars
 
 # --------- NAO seasonal data -> identify high/low NAO periods -----------
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
@@ -73,10 +78,9 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 # NAO_cut = 2.5 # based on plot for individual normalised NAO values
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
-#case = 'NAOp' 
-case = 'NAOn'
+case_list = ['NAOp', 'NAOn']
 
-for var in var_list:
+for case in case_list:
     
     print("Running var = ", var)
 
@@ -125,15 +129,20 @@ for var in var_list:
                 if(count_NAO.isel(r=r).sel(start_year=year) == 1): 
                     
                     # this is for ocean vars
-                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/*.nc"
-                    with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
-                        d = d
-                        
-                    # this is for atmos vars
-                    #var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/*.nc"
-                    #d = xr.open_mfdataset(var_path, chunks={'time':1}, engine='netcdf4')
                     
-                    d = d[var].drop('time') - ds_drift[var].isel(r=r)
+                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + "tos" + "/gn/latest/*.nc"
+                    with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
+                        d1 = d
+
+                    var_path = ppdir + "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + "sos" + "/gn/latest/*.nc"
+                    with xr.open_mfdataset(var_path, preprocess=select_subset, chunks={'time':1}, engine='netcdf4') as d:
+                        d2 = d
+
+                    d = xr.merge([d1.tos, d2.sos])
+
+                    d['sigma0'] = xr.apply_ufunc(pdens, d['sos'], d['tos'], dask='parallelized', output_dtypes=[d['sos'].dtype])
+                    
+                    d = d['sigma0'].drop('time') - ds_drift['sigma0'].isel(r=r)
 
                     ds.append(d.isel(time = slice((int(tim_ind/4)-1)*12, (int(tim_ind/4) + 7)*12 + 5)))
                 
@@ -145,102 +154,7 @@ for var in var_list:
     # if ocean vars
     comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).compute()
     
-    # if 3D ocean vars to save vertical sections
-    #ds = ds.chunk({'lev':5})
-    #comp_save = (ds.sel(j=slice(780, 1100),i=slice(810,1170))).astype(np.float32).mean('comp').compute()
-    
-    # if atmos. vars
-    #comp_save = ds.sel(lat=slice(20., 75.)).astype(np.float32).compute()
-    
-    save_file = save_path + "Composite_" + case + "_" + var + ".nc"
+    save_file = save_path + "Composite_" + case + "_sigma0.nc"
     comp_save.to_netcdf(save_file)
     print("Data saved successfully")
-    
-    
-"""
-NAO_cut = 2.5 # based on plot for individual NAO values
-tim_ind = 4 # could be any index (0, 4, 8, ... are for DJF)
 
-ind_NAOp = xr.where(NAO_season.isel(time=tim_ind) >= NAO_cut, 1, 0)
-ind_NAOn = xr.where(NAO_season.isel(time=tim_ind) <= -NAO_cut, 1, 0)
-
-case = 'NAOp' 
-#case = 'NAOn'
-
-if (case == 'NAOp'):
-    count_NAO = ind_NAOp
-elif (case == 'NAOn'):
-    count_NAO = ind_NAOn
-else:
-    print("Choose a valid case")
-    
-# ----------- Read data and save relevant values ----------- 
-
-for var in var_list:
-    
-    print("Running var = ", var)
-
-    # Read drift data
-    ds_drift = []
-
-    for r in range (0,10):
-
-        ds1 = []
-        for lead_year in range(0,11):
-
-            d = xr.open_dataset(ppdir_drift + var + "/Drift_"+ var + "_r" + 
-                                str(r+1) +"_Lead_Year_" + str(lead_year+1) + ".nc")
-            d = d.assign(time = np.arange(lead_year*12, 12*lead_year + 
-                                          np.minimum(12, len(d['time'])), 1))
-            ds1.append(d)
-                
-        ds1 = xr.concat(ds1, dim='time')
-        ds_drift.append(ds1)
-
-    ds_drift = xr.concat(ds_drift, dim='r')
-    ds_drift = ds_drift.drop('time')
-    #ds_drift = ds_drift.chunk({'time':12, 'j':50, 'i':50})
-
-    print("Drift Data read complete")
-    
-    # Read full data to compute anomaly
-    ds = []
-    
-    for r in range(0,10):
-        
-        for year in range(year1, year2, 1):
-            
-            if(count_NAO.isel(r=r).sel(start_year=year) == 1):
-                
-                #var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Omon/" + var + "/gn/latest/"
-                var_path = "s" + str(year) +"-r" + str(r+1) + "i1p1f2/Amon/" + var + "/gn/latest/"
-                
-                d = xr.open_mfdataset(ppdir + var_path + "*.nc")
-                #d = d.chunk({'time':12, 'j':50, 'i':50})
-                d = d[var].drop('time') - ds_drift[var].isel(r=r)
-                
-                ds.append(d)
-                
-    ds = xr.concat(ds, dim='comp')
-    ds = ds.assign_coords(time=tim)
-    
-    print("Composite Data read complete")
-    
-    # Option one
-    #ds_season = ds.isel(time=slice(1,len(ds.time)-1))
-    #ds_season = ds_season.resample(time='QS-DEC').mean('time')
-    #ds_season = ds_season.isel(time=tim_ind)
-    #ds_season = ds_season.compute()
-    
-    # Option two
-    with ProgressBar():
-        ds_season = ds.mean('comp').compute()
-    
-    comp_save = xr.Dataset()
-    comp_save[var] = ds_season
-    save_file = save_path + "Composite_" + case + "_" + var + '_tim_ind_' + str(tim_ind) + ".nc"
-    comp_save.to_netcdf(save_file)
-    
-    print("Data saved successfully")
-
-"""

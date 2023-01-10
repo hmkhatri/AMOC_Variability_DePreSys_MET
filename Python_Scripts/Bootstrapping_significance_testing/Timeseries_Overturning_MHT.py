@@ -94,7 +94,7 @@ case_list = ['NAOp', 'NAOn']
 for case in case_list:
     
     var_list = ['Overturning_Ekman', 'Overturning_max_z', 'Overturning_max_sigma', 
-                'MHT_overturning_sigma', 'MHT_overturning_z']
+                'MHT_overturning_sigma', 'MHT_overturning_z', 'MFT_overturning_sigma', 'MFT_overturning_z']
     
     # ----------------------------
     # Read datafiles
@@ -118,6 +118,20 @@ for case in case_list:
     
     ds1['MHT_gyre_z_int'] = ds1['MHT_gyre_z'].sum('lev')
     ds1['MHT_overturning_z_int'] = ds1['MHT_overturning_z'].sum('lev')
+
+    
+    ds1['MFT_isopycnal_sigma'] = (ds['MFT_sigma'] - ds['MFT_sigma_baro'] - ds['MFT_overturning_sigma_baro_v'] - 
+                                  ds['MFT_overturning_sigma_baro_so'] - ds['MFT_overturning_sigma'])
+    
+    ds1['MFT_gyre_z'] = (ds['MFT_z'] - ds['MFT_z_baro'] - ds['MFT_overturning_z_baro_v'] - 
+                         ds['MFT_overturning_z_baro_so'] - ds['MFT_overturning_z'])
+
+    ds1['MFT_isopycnal_sigma_int'] = ds1['MFT_isopycnal_sigma'].sum('sigma0')
+    ds1['MFT_overturning_sigma_int'] = ds1['MFT_overturning_sigma'].sum('sigma0')
+    
+    ds1['MFT_gyre_z_int'] = ds1['MFT_gyre_z'].sum('lev')
+    ds1['MFT_overturning_z_int'] = ds1['MFT_overturning_z'].sum('lev')
+    
     
     ds1 = (ds1.isel(j_c=slice(160,303))).sel(lat=slice(39., 61.)) # get values between 40N - 60N
     
@@ -129,7 +143,9 @@ for case in case_list:
     
     var_list = ['Overturning_Ekman', 'Overturning_max_z', 'Overturning_max_sigma', 'MHT_overturning_sigma', 'MHT_overturning_z',
                'MHT_isopycnal_sigma', 'MHT_gyre_z', 'MHT_isopycnal_sigma_int',
-               'MHT_overturning_sigma_int', 'MHT_gyre_z_int', 'MHT_overturning_z_int']
+               'MHT_overturning_sigma_int', 'MHT_gyre_z_int', 'MHT_overturning_z_int',
+               'MFT_overturning_sigma', 'MFT_overturning_z', 'MFT_isopycnal_sigma', 'MFT_gyre_z', 'MFT_isopycnal_sigma_int',
+               'MFT_overturning_sigma_int', 'MFT_gyre_z_int', 'MFT_overturning_z_int']
     
     for var1 in var_list:
     
@@ -147,7 +163,8 @@ for case in case_list:
     ds_save['latitude'] = ds['latitude'].isel(j_c=slice(160,303))
     
     var_list = ['Overturning_Ekman', 'Overturning_max_z', 'Overturning_max_sigma', 'MHT_isopycnal_sigma_int',
-               'MHT_overturning_sigma_int', 'MHT_gyre_z_int', 'MHT_overturning_z_int']
+               'MHT_overturning_sigma_int', 'MHT_gyre_z_int', 'MHT_overturning_z_int',
+               'MFT_isopycnal_sigma_int', 'MFT_overturning_sigma_int', 'MFT_gyre_z_int', 'MFT_overturning_z_int']
     
     for var1 in var_list:
         
@@ -161,13 +178,14 @@ for case in case_list:
         ds_save[var1 + '_confidence_lower'] = xr.DataArray(data = bootstrap_ci.confidence_interval[0], dims=dim_list)
         ds_save[var1 + '_confidence_upper'] = xr.DataArray(data = bootstrap_ci.confidence_interval[1], dims=dim_list)
         
-    var_list = ['MHT_overturning_sigma', 'MHT_overturning_z', 'MHT_isopycnal_sigma', 'MHT_gyre_z']
+    var_list = ['MHT_overturning_sigma', 'MHT_overturning_z', 'MHT_isopycnal_sigma', 'MHT_gyre_z',
+               'MFT_overturning_sigma', 'MFT_overturning_z', 'MFT_isopycnal_sigma', 'MFT_gyre_z']
     
     for var1 in var_list:
         
         ds_save[var1] = ds_mean[var1].mean('comp')
         
-    save_file_path = (save_path + "Bootstrap_"+ case + "_Overturning_MHT_timeseries.nc")
+    save_file_path = (save_path + "Bootstrap_"+ case + "_Overturning_MHT_MFT_timeseries.nc")
     ds_save = ds_save.astype(np.float32).compute()
     ds_save.to_netcdf(save_file_path)
 
