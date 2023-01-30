@@ -87,7 +87,7 @@ tim1 = tim1.astype("datetime64[ns]")
 
 win_month = 6 # number of months for averaging
 cf_lev = 0.95 # confidence level
-num_sample = 10000 # bootstrap samples to create
+num_sample = 1000 # bootstrap samples to create
 
 case_list = ['NAOp', 'NAOn']
 
@@ -133,7 +133,8 @@ for case in case_list:
     ds1['MFT_overturning_z_int'] = ds1['MFT_overturning_z'].sum('lev')
     
     
-    ds1 = (ds1.isel(j_c=slice(160,303))).sel(lat=slice(39., 61.)) # get values between 40N - 60N
+    # ds1 = (ds1.isel(j_c=slice(160,303))).sel(lat=slice(39., 61.)) # get values between 40N - 60N
+    ds1 = (ds1.isel(j_c=slice(0,303))).sel(lat=slice(0., 61.)) # get values between 0 - 60N
     
     # ----------------------------
     # Compute moving means
@@ -160,7 +161,8 @@ for case in case_list:
     # ----------------------------
     
     ds_save = xr.Dataset()
-    ds_save['latitude'] = ds['latitude'].isel(j_c=slice(160,303))
+    # ds_save['latitude'] = ds['latitude'].isel(j_c=slice(160,303))
+    ds_save['latitude'] = ds['latitude'].isel(j_c=slice(0,303))
     
     var_list = ['Overturning_Ekman', 'Overturning_max_z', 'Overturning_max_sigma', 'MHT_isopycnal_sigma_int',
                'MHT_overturning_sigma_int', 'MHT_gyre_z_int', 'MHT_overturning_z_int',
