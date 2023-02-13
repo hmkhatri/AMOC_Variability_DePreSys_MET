@@ -27,7 +27,8 @@ ppdir_NAO="/home/users/hkhatri/DePreSys4_Data/Data_Anomaly_Compute/NAO/"
 
 save_path="/gws/nopw/j04/snapdragon/hkhatri/Data_Composite/NAO_hpa/" 
 
-year1, year2 = (1960, 1980) #2017)
+#year1, year2 = (1960, 1980) #2017)
+year1, year2 = (1990, 2010)
 
 # NAO seasonal data -> identify high/low NAO periods
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
@@ -47,7 +48,7 @@ NAO_season = NAO.resample(time='QS-DEC').mean('time')
 NAO_cut = 1300. # based on plot for individual NAO values in pa
 
 #case_list = ['NAOp', 'NAOn'] 
-case = 'NAOp'
+case_list = ['NAOp']
 
 # read drift model data
 
@@ -95,7 +96,8 @@ for case in case_list:
 
         for r in range(0,10):
 
-            d = xr.open_dataset(data_dir + "Overturning_Heat_Salt_Transport_r" + str(r+1) + ".nc", chunks={'start_year':1})
+            d = xr.open_dataset(data_dir + "Overturning_Heat_Salt_Transport_r" + str(r+1) + ".nc", 
+                                chunks={'start_year':1, 'time':1})
 
             for year in range(year1, year2, 1):
 
@@ -135,6 +137,6 @@ for case in case_list:
     comp_save = ds.astype(np.float32).compute()
 
     #save_file = save_path + "Composite_" + case + "_Overturning_MHT.nc"
-    save_file = save_path + "Composite_" + case + "_Overturning_MHT_Cool_Period.nc"
+    save_file = save_path + "Composite_" + case + "_Overturning_MHT_Warm_Period.nc"
     comp_save.to_netcdf(save_file)
     print("Data saved successfully")

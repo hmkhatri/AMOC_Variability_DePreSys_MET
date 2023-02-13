@@ -96,7 +96,8 @@ for case in case_list:
 
         for r in range(0,10):
 
-            d = xr.open_dataset(data_dir + "Overturning_Heat_Salt_Transport_r" + str(r+1) + ".nc", chunks={'start_year':1})
+            d = xr.open_dataset(data_dir + "Overturning_Heat_Salt_Transport_r" + str(r+1) + ".nc", 
+                                chunks={'start_year':1, 'time':1})
 
             for year in range(year1, year2, 1):
 
