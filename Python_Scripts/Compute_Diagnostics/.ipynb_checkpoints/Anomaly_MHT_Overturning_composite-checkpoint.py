@@ -1,5 +1,5 @@
 ## --------------------------------------------------------------------
-# We compute anomalies in meridional heat transport (MHT) and overturning at 26.55 at 50N across all simualtions (after correcting for model drift).
+# We compute anomalies in meridional heat transport (MHT) and overturning at 26.55 averaged between 45-55N across all simualtions (after correcting for model drift).
 # These anomalies the time-mean over years 4-6 in simualtions
 # These anomalies will then be used for creating composites using members that have the same sign of MHT and overturning anomalies.
 ## --------------------------------------------------------------------
@@ -50,6 +50,7 @@ save_path="/gws/nopw/j04/snapdragon/hkhatri/DePreSys4/Data_Composite/Overturning
 
 ds_NAO = xr.open_dataset(ppdir_NAO + "NAO_SLP_Anomaly_new.nc")
 tim = ds_NAO['time_val'].isel(start_year=0).drop('start_year')
+tim = tim.astype("datetime64[ns]") # to get correct number of days in months
 
 # --------- Read drift data ---------------
 
@@ -76,9 +77,13 @@ for r in range(0,10):
 ds_drift = xr.concat(ds_drift, dim='r')
     
 ds_drift = ds_drift.drop('j_c')
+
+delta_y = (ds_drift['latitude'].isel(time=0, r=0).diff('j_c').isel(j_c=slice(192, 267)) 
+           + ds_drift['latitude'].isel(time=0, r=0).diff('j_c').isel(j_c=slice(191, 266))) * 0.5  # dy at 45N - 55N
+
 ds_drift = ds_drift.assign_coords(j_c=ds_drift['latitude'].isel(time=0, r=0))
 
-ds_drift = ds_drift.isel(j_c=225, lat = 89) # to get values closest to 50N. j_c = 49.95, lat = 49.72
+ds_drift = ds_drift.isel(j_c = slice(192, 267)) # to get values closest to 45N - 55N
 
 ds_drift = ds_drift.chunk({'time':-1})
 
@@ -99,14 +104,16 @@ ds = xr.concat(ds, dim='r')
 ds = ds.drop('j_c')
 
 ds = ds.assign_coords(j_c=ds['latitude'].isel(start_year=0, r=0).drop('start_year'))
-ds = ds.isel(j_c=225, lat = 89) # to get values closest to 50N. j_c = 49.95, lat = 49.72
+#ds = ds.isel(j_c=225, lat = 89) # to get values closest to 50N. j_c = 49.95, lat = 49.72
+ds = ds.isel(j_c = slice(192, 267)) # to get values closest to 45N - 55N
 
 ds['Overturning_max_sigma'] = (ds['Overturning_sigma'] - ds['Overturning_sigma_barotropic']).max(dim='sigma0')
 
-
 # ----------- Main computations --------------
+delta_y = delta_y.assign_coords(j_c=ds['j_c'])
+ds1 = ((ds - ds_drift) * delta_y).sum('j_c') / delta_y.sum('j_c') # mean over 45N-55N
 
-ds1 = (ds - ds_drift).assign_coords(time=tim) # get anomaly by removing model drift
+ds1 = ds1.assign_coords(time=tim) # get anomaly by removing model drift
 
 year1, year2 = (1964, 1966) # get 3-yr averages (1964-1966 is in the middle of the simulations)
 
