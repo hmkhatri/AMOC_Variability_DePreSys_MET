@@ -50,7 +50,7 @@ if (ensemble == 'MHT'):
     MHT_mean_cut = ds_cut['MHT_mean'].mean(['start_year', 'r'])
 
 elif (ensemble == 'Psi'):
-    case_list = ['Psip', 'Psin']
+    case_list = ['Psin'] #, 'Psin']
     Psi_std_cut = 1. * ds_cut['Psimax_mean'].std(['start_year', 'r'])  # outside 1-sigma / 2-sigma based on mean MHT 4-6 years of simulations
     Psi_mean_cut = ds_cut['Psimax_mean'].mean(['start_year', 'r'])
 
@@ -140,7 +140,7 @@ for case in case_list:
     print("Composite Data read complete")
     print("Total cases = ", len(ds['comp']), " - case ", case)
 
-    for i in range(0, len(ds['comp'])):
+    for i in range(85, len(ds['comp'])):
 
         comp_save = ds.isel(comp=i)
         comp_save = comp_save.astype(np.float32).compute()
