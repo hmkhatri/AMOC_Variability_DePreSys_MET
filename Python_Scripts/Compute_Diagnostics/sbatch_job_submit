@@ -57,6 +57,8 @@ source /home/users/hkhatri/miniconda3/bin/activate
 
 # srun python Anomaly_MHT_Overturning_composite.py
 
-mpirun python Composite_Overturning_Transport_extreme_MHT.py
+# mpirun python Composite_Overturning_Transport_extreme_MHT.py
+
+mpirun python Composite_Heat_Budget_extreme_MHT_Psi.py
 
 # module purge 
