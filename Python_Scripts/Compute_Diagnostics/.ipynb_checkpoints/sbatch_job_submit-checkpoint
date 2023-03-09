@@ -1,0 +1,64 @@
+#!/bin/bash
+# SBATCH --partition=par-multi 
+#SBATCH --partition=par-single
+# SBATCH --partition=test
+#SBATCH --ntasks=16
+# SBATCH --partition=high-mem
+# SBATCH --mem=128GB
+# SBATCH --partition=short-serial
+# SBATCH --partition=short-serial-4hr
+# SBATCH --account=short4hr 
+#SBATCH -o %j.out 
+#SBATCH -e %j.err
+#SBATCH --time=46:00:00
+
+# load python3 module
+# module add jaspy
+
+source /home/users/hkhatri/miniconda3/bin/activate
+
+# module load eb/OpenMPI/gcc/4.0.0
+
+# Execute python script
+
+# srun python Overturning_transport_depth_sigma.py
+
+# mpirun python Overturning_sigma_z.py
+
+# srun python Overturning_Meridional_Heat_sigma_z.py 
+
+# srun python Gyre_Heat_Decompose.py
+
+# srun python Heat_Budget.py
+
+# srun python Heat_Budget_Drift_Data.py
+
+# srun python Overturning_Ekman.py
+
+# srun python Composite_3D_NAO_phase.py
+
+# srun python Composite_Heat_Budget_NAO_extreme.py  
+
+# srun python Composite_Gyre_Transport_NAO_phases.py
+
+# srun python Anomaly_SLP_NAO_compute.py
+
+# srun python Composite_Diagnostics_NAO_phases.py
+
+# srun python Composite_density_NAO_phases.py
+
+# srun python Composite_Overturning_NAO_extremes.py
+
+# srun python Correlation_NAO_ocean_var.py
+
+
+
+
+
+# srun python Anomaly_MHT_Overturning_composite.py
+
+# mpirun python Composite_Overturning_Transport_extreme_MHT.py
+
+mpirun python Composite_Heat_Budget_extreme_MHT_Psi.py
+
+# module purge 
